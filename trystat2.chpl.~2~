@@ -1,0 +1,7 @@
+use Random;
+var x: [1..10000] real;
+fillRandom(x);
+use nstat only reglina;
+var y = 2*x;
+var (xm,xv) = stat2(A);
+writeln(" ", xm, "  ", xv);

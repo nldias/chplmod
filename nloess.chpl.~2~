@@ -1,0 +1,209 @@
+// =============================================================================
+// ==> nloess: my implementation of the loess algorithm
+//
+// 2022-04-22T12:11:44 a new star is born
+// 2022-04-22T17:34:40 essentially done ... hopefully
+// =============================================================================
+use ssr only amin, amax, indxquickselect;
+use matrix;
+use Types;
+
+// -----------------------------------------------------------------------------
+// I use tricubic as a scalar function only
+// -----------------------------------------------------------------------------
+proc tricubic(const in x: real): real {
+   var ax = abs(x) ;
+   return if ax < 1.0 then (1-ax**3)**3 else 0.0 ;
+}
+
+// -----------------------------------------------------------------------------
+// --> normalize_array: gess what: normalizes data
+// -----------------------------------------------------------------------------
+proc normalize_array(
+   ref a: [] real,            // raw data
+   ref n_a: [] real           // normalized data
+   ): (real,real)
+   where (a.rank == 1) {
+   assert (a.shape == n_a.shape);
+   var a_min = amin(a);
+   var a_max = amax(a);
+   n_a = (a - a_min) / (a_max - a_min);
+   return (a_min, a_max);
+}
+
+private var
+   degree = 1;      // degree of linear regression of this loess
+private var
+   window: int;     // window of this loess
+private var
+   xx_min,          // minimum of xx data
+   xx_max,          // maximum of xx data
+   yy_min,          // minimum of yy data
+   yy_max:          // maximum of yy data
+   real;
+private var
+   ldom = {0..0};   // data domain initially empty
+private var
+   n_xx,            // normalized x data
+   n_yy:            // normalized y data
+   [ldom] real;
+// -----------------------------------------------------------------------------
+// --> initialize loess: normalize data arrays making local copies to
+// n_xx and n_yy via normalize_array. For clarity, nloess will use
+// 1-based arrays throughout
+// -----------------------------------------------------------------------------
+proc init_loess(
+   ref xx: [] real,           // the raw x data
+   ref yy: [] real,           // the raw y data
+   in win: int,               // the window, once and for all, of this loess
+   in deg: int = 1            // the degree of this loess
+   )  where (xx.rank == 1) {
+   assert (xx.shape == yy.shape);
+// -----------------------------------------------------------------------------
+// set these global variables once and for all
+// -----------------------------------------------------------------------------
+   window = win;
+   degree = deg;
+   var nd: int = xx.size;
+   ldom = {1..nd};            // allocate mem for n_xx and n_yy
+   (xx_min,xx_max) = normalize_array(xx,n_xx);
+   (yy_min,yy_max) = normalize_array(yy,n_yy);
+   return;
+}
+
+// -----------------------------------------------------------------------------
+// --> get_min_range: the indices of the window smallest
+// -----------------------------------------------------------------------------
+proc get_min_range(
+   ref distances: [] real,   // the local distances
+   ref min_range: [] int
+   ) where distances.rank == 1 {      
+   var dinds = distances.indices;
+   var indx = [i in dinds] i ;
+   indxquickselect(indx,distances,dinds.first,dinds.last,window);
+   min_range =  [k in 1..window] indx[k];
+}
+
+// -----------------------------------------------------------------------------
+// --> get_weights: I suspect that max_distance == distances[indx[wind-1]]
+// because of partial sorting
+// -----------------------------------------------------------------------------
+proc get_weights(
+   ref distances: [] real,
+   ref min_range: [] int,
+   ref weights: [] real
+   ) where distances.rank == 1 && min_range.rank == 1 {
+   assert(min_range.shape == weights.shape);
+   var max_distance = min(real);
+   var wind = min_range.size;
+// -----------------------------------------------------------------------------
+// find maximum distance
+// -----------------------------------------------------------------------------
+   for k in 1..wind do {
+      if distances[min_range[k]] > max_distance then {
+         max_distance = distances[min_range[k]];
+      }
+   }
+// -----------------------------------------------------------------------------
+// normalize with weights
+// -----------------------------------------------------------------------------
+   for k in 1..wind do {
+      weights[k] = tricubic(distances[min_range[k]]/max_distance);
+   }
+}
+
+// -----------------------------------------------------------------------------
+// we will need to come back to normalize
+// -----------------------------------------------------------------------------
+inline proc normalize_x(
+   const in x: real        // the data array?
+   ): real {
+   return (x - xx_min)/(xx_max - xx_min);
+}
+
+inline proc denormalize_y(
+   const in y: real) : real {
+   return y * (yy_max - yy_min) + yy_min;
+}
+
+// -----------------------------------------------------------------------------
+// --> estimate is the core less algorithm
+// -----------------------------------------------------------------------------
+proc estimate(
+   in x: real                 // point around which to do linear regression
+   ) {
+   const m: int = window;     // size of neighborhood == window
+   const n: int = degree;     // degree of linear regression == degree
+   var n_x = normalize_x(x);  // normalize independent variable
+// -----------------------------------------------------------------------------
+// do I really need to calculate all distances for each point?
+// -----------------------------------------------------------------------------
+   var nd = n_xx.size;
+   var distances: [1..nd] real = abs(n_x - n_xx);
+   writeln("distances rank = ",distances.rank);
+   var min_range: [1..window] int;
+   writeln(min_range);
+   var weights: [1..window] real;
+   get_min_range(distances, min_range);
+   get_weights(distances, min_range, weights);
+// -----------------------------------------------------------------------------
+// here I use m,n instead of window, degree
+// estimate beta = [Xtr(n+1,m)W(m,m)X(m,n+1)]^(-1)Xtr(n+1,m)W(m,m)n_yy(m,1)
+// -----------------------------------------------------------------------------      
+   var W: [1..m,1..m] real = 0.0;
+   var X: [1..m,0..n] real;
+   var Y: [1..m] real;
+// -----------------------------------------------------------------------------
+// fill diagonal of W with weights
+// -----------------------------------------------------------------------------
+   for i in 1..m do {
+      W[i,i] = weights[i];
+   }
+// -----------------------------------------------------------------------------
+// trickiest part is to build X
+// -----------------------------------------------------------------------------
+   for i in 1..m do {
+      X[i,0] = 1.0 ;
+      X[i,1] = n_xx[min_range[i]];
+      for j in 2..n do {
+         X[i,j] = (n_xx[min_range[i]])**j;
+      }
+   }
+// -----------------------------------------------------------------------------
+// Y also needs to be built
+// -----------------------------------------------------------------------------
+   for i in 1..m do {
+      Y[i] = n_yy[min_range[i]];
+   }
+// -----------------------------------------------------------------------------
+// ready for linear regression
+// -----------------------------------------------------------------------------
+   var A: [0..n,1..m] real;
+   var B: [0..n,0..n] real;
+   var C: [0..n,1..m] real;
+   var beta: [0..n] real;
+// -----------------------------------------------------------------------------
+// lots of matrix multiplications!
+// -----------------------------------------------------------------------------
+   dot_mtm(X,W,A);
+   dot_mm(A,X,B);
+   minvgj(B);
+   dot_mmt(B,X,A);                 // re-using A !!!
+   dot_mm(A,W,C);
+   dot_mv(C,Y,beta);            // finally the parameters of the LLR
+// -----------------------------------------------------------------------------
+// now we can estimate!
+// -----------------------------------------------------------------------------
+   var xp: [0..n] real ;
+   xp[0] = 1.0;
+   xp[1] = x ;
+   for j in 2..n do {
+      xp[j] = x**j;
+   }      
+   var y = dot_vtv(beta,xp);     // and the local estimate!         
+   return denormalize_y(y);
+}
+
+
+
+

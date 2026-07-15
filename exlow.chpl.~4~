@@ -1,0 +1,22 @@
+use nstat;
+use IO only openWriter;
+use prob only fillNormal;
+use Math;
+const n = 200;
+var dx = 2*pi/n ;
+var xx = [ i in 0..n-1] i*dx;           // data points in x
+var ya = sin(xx);                       // the "real" data
+var zz: [0..n-1] real;                  // noise around it
+fillNormal(zz);                         // gaussian noise
+var yy = ya + 0.25*zz;                  // the noisy data
+var ye: [0..n-1] real;                  // the estimates of the real data
+const fou = openWriter("exlow.out");    // open the output file
+init_lowess(xx,yy,n/8,1);              // init the lowess filter
+forall i in 0..n-1 do {                 // apply the lowess filter
+   ye[i] = lowess_estimate(xx[i]);
+}
+for i in 0..n-1 do {                    // write the output file
+   fou.writef("%12.8dr %12.8dr %12.8dr %12.8dr\n",xx[i],yy[i],ya[i],ye[i]);
+}
+fou.close();                            // close the output
+   

@@ -1,0 +1,67 @@
+// ===================================================================
+// ==> nstrings: utility functions for strings
+// ===================================================================
+use CTypes;
+// -------------------------------------------------------------------
+// --> ord: the codepoint of a 1-char string
+// -------------------------------------------------------------------
+proc ord(c: string): int(32) {
+	assert(c.size == 1);
+	return c.toCodepoint();
+}
+// -------------------------------------------------------------------
+// --> chr: the 1-char string corresponding to a codepoint
+// -------------------------------------------------------------------
+proc chr(i: int(32)): string {
+	return codepointToString(i);
+}
+// -------------------------------------------------------------------
+// --> strtoarc: convert string to array of 1-char strings
+// -------------------------------------------------------------------
+proc strtoarc(s: string): [] string {
+   const n = s.size;
+   var a = [i in 0..#n] s[i];       // split s into chars -> a @\label{lin:nstrings-sintoc}@
+	return a;
+}
+// -------------------------------------------------------------------
+// --> arctostr: convert array of 1-char strings to string
+// -------------------------------------------------------------------
+proc arctostr(a: [] string): string {
+	assert(a.rank == 1);                 // a must be rank 1
+	for i in a.domain do {              
+	   assert(a[i].size == 1);           // is a an "array of char" @\label{lin:nstrings-arc}@
+	}
+	const s = "".join(a);                // join all chars
+	return s;
+}
+// -------------------------------------------------------------------
+// --> reverse a string
+// -------------------------------------------------------------------
+proc reverse(s: string): string {
+	const n = s.size;
+	var a = strtoarc(s);
+	for i in 0..n/2 do {  
+           a[i] <=> a[n-1-i];                // reverse char positions  @\label{lin:nstrings-reverse}@
+	}
+   return(arctostr(a));
+}
+// -------------------------------------------------------------------
+// --> ifind: find where needle is inside string. returns -1 if
+//     needle is not found
+// -------------------------------------------------------------------
+proc string.ifind(needle: string): int {
+   var n = this.size;
+   var s = needle.size;
+   var i = 0;
+   do {
+      if (this[i..#s] == needle) then return i;
+      i += 1;
+   } while i <= n-s ;
+   return -1;
+}
+// -------------------------------------------------------------------
+// --> chplString: convert a x* char -> chapel string
+// -------------------------------------------------------------------
+proc chplString(const in x: c_ptr(c_char)): string {
+   return string.createBorrowingBuffer(x,strLen(x));
+}

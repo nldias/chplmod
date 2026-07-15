@@ -1,0 +1,10 @@
+use vec;
+use Random;
+var A = new vec({1..10});
+fillRandom(A.arr);
+var x = [i in 1..10] i:real; 
+writeln("A = ",A);
+writeln(x);
+var B = new vec({1..10});
+B.arr = x;
+writeln("B = ",B);

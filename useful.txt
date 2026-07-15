@@ -1,0 +1,5 @@
+https://github.com/joaofig/pyloess
+
+https://towardsdatascience.com/loess-373d43b03564
+
+https://github.com/joaofig/pyloess/blob/master/pyloess/Loess.py

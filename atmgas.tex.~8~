@@ -1,0 +1,431 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper,top=3cm,right=2cm,left=2cm,bottom=2.5cm]{geometry}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext}
+\usepackage[ttscale=0.875]{libertine}
+\input{math.tex}
+\usepackage[libertine,cmintegrals,cmbraces]{newtxmath}
+\usepackage[round]{natbib}
+\usepackage[american]{babel}
+\usepackage[small,compact]{titlesec}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{booktabs}
+%% \usepackage{subscript}
+%% \usepackage{enumerate}
+%% \usepackage{booktabs}
+%% \usepackage{tabu}
+%% \usepackage{setspace}
+%% \usepackage{comment}
+\usepackage[defaultlines=4,all]{nowidow}
+\usepackage{needspace}
+\usepackage{graphicx}
+\usepackage{mathrsfs}
+\usepackage{ifpdf}
+\usepackage{upgreek}
+\usepackage[pdftex,colorlinks=true,%
+   urlcolor=blue,
+   linkcolor=blue,
+   citecolor=blue,
+   filecolor=blue]{hyperref}
+\usepackage{iexec}
+\input{mylistings.tex}
+\input{mydescription.tex}
+\input{ira.tex}
+\renewcommand{\ttdefault}{lmtt}% default cmtt
+\newcommand{\texttk}[1]{\texttt{\bfseries #1}}
+\newcommand{\ul}{\underline}
+
+\title{Documentation for \texttt{atmgas.chpl}}
+
+\author{Nelson Luís Dias (\texttt{nelsonluisdias@gmail.com})}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\texttt{atmgas} is a module for various calculations of atmospheric
+gas properties. 
+\end{abstract}
+
+\part{Results for mixtures of ideal gases}\label{part:theory}
+
+
+
+\paragraph{Note} The equations used to manipulate different kinds of concentrations
+described here are based on a research article that I published in
+Portuguese \citep{dias2021revisao}, from which I also reproduce two
+tables. Other sources for equations are cited along the text.
+
+\vspace*{12pt}
+
+The equation of state for an ideal gas is
+\begin{equation}
+pV = nR^{\text{*}}T,\label{eq:tudo}
+\end{equation}
+where $p$ is pressure, $V$ is the volume occupied by the gas, $n$ is
+the number of moles, $R^{\text{*}} = 8{,}31446261815$ $\mathrm{J\,mol^{-1}\,K^{-1}}$
+(in SI units) is the universal gas constant, and  $T$ is the
+thermodynamic temperature.
+% É importante notar que (\ref{eq:tudo}) é um excelente
+% modelo para o comportamento dos gases na troposfera.
+It can also be written
+\begin{equation}
+p = n\frac{R^{\text{*}}}{V} T 
+       = \frac{m}{M}\frac{R^{\text{*}}}{V} T
+= \frac{m}{V}\frac{R^{\text{*}}}{M} T\;\Rightarrow\;
+p = \rho R T, \label{eq:prhoRt}
+\end{equation}
+where $M$ is molar mass and $m$ is the mass of the gas, with
+\begin{equation}
+m = nM. \label{eq:mnM}
+\end{equation}
+The gas constant and density are
+\begin{align}
+R &= \frac{R^{\text{*}}}{M},\label{eq:RRM}\\
+\rho &= \frac{m}{V}. \label{eq:def-rho}
+\end{align}
+
+
+
+Equations (\ref{eq:tudo})--(\ref{eq:def-rho}) also apply to a
+\emph{mixture} of ideal gases with a few modifications.  Let $i$ be
+each gas in the mixture; the total number of moles is
+\begin{equation}
+n = \sum_{i} n_i,\label{eq:total-n}
+\end{equation}
+where $n_i$ is the number of moles of gas $i$.  Assume that the gas
+law applies for each gas; in the partial pressure model, each gas
+exerts a partial pressure $p_i$, and all gases share a common volume $V$:
+\begin{equation}
+p_i V = n_i R^{\text{*}}T.\label{eq:gas-pi}
+\end{equation}
+The total pressure is
+\begin{equation}
+p = \sum_{i} p_{i}.\label{eq:sum-p-i}
+\end{equation}
+Summing over (\ref{eq:gas-pi}) recovers the gas law for the mixture:
+\begin{align*}
+  \sum_{i} \left( p_i V \right) &= \sum_i \left(n_i R^{\text{*}}T\right),\\
+  \left(\sum_{i} p_i  \right)V &= \left( \sum_i  n_i\right)R^{\text{*}}T,\\
+  p V &= nR^{\text{*}}T.
+\end{align*}
+By the same token, in the partial volume model each gas occupies a
+volume $V_i$ under the same pressure $p$:
+\begin{equation}
+p V_i = n_i R^{\text{*}}T,\label{eq:gas-Vi}
+\end{equation}
+with
+\begin{equation}
+V = \sum_{i}V_i.\label{eq:sum-V-i}
+\end{equation}
+and again summing over (\ref{eq:gas-Vi}) recovers the gas law for the mixture:
+\begin{align*}
+  \sum_{i} \left( p V_i \right) &= \sum_i \left(n_i R^{\text{*}}T\right),\\
+  p\left(\sum_{i}  V_i\right) &= \left( \sum_i  n_i\right)R^{\text{*}}T,\\
+  p V &= nR^{\text{*}}T.
+\end{align*}
+
+
+Taking the ratio of (\ref{eq:gas-pi}) to (\ref{eq:tudo}) and of
+(\ref{eq:gas-Vi}) to (\ref{eq:tudo}), the partial pressure fraction,
+the partial volume fraction, and the molar fraction are all given by
+\begin{equation}
+x_i = \frac{p_i}{p} = \frac{V_i}{V} =  \frac{n_i}{n}.\label{eq:fracoes-gas}
+\end{equation}
+
+
+The state equation for each gas can also be written
+\begin{equation}
+p_i = n_i\frac{R^{\text{*}}}{V} T 
+       = \frac{m_i}{M_i}\frac{R^{\text{*}}}{V} T
+       = \frac{m_i}{V}\frac{R^{\text{*}}}{M_i} T\;\Rightarrow\;
+p_i = \rho_i R_i T,\label{eq:prhoRt-chi}
+\end{equation}
+in analogy with (\ref{eq:prhoRt}). The molar mass of gas $i$ is $M_i$
+and its mass is $m_i$, with
+\begin{equation}
+m_i = n_i M_i. \label{eq:mnMi}
+\end{equation}
+The gas constant and density of gas $i$ are
+\begin{align}
+  R_i &= \frac{R^{\text{*}}}{M_i} \label{eq:Rchidef}, \\
+  \rho_i &= \frac{m_i}{V}.\label{eq:def-rho-chi}
+\end{align}
+
+
+Equation (\ref{eq:prhoRt-chi}) allows to obtain $R$ in
+(\ref{eq:prhoRt}) in terms of the $R_i$\is\ as follows. The total mass
+is
+\begin{equation}
+  m = \sum_{i} m_i;\label{eq:mass-total}
+\end{equation}
+the gas densities also sum up:
+\begin{equation}
+\rho = \frac{m}{V} = \frac{\sum_i m_i}{V} = \sum_i \frac{m_i}{V} =
+\sum_i \rho_i.\label{eq:rho-total}
+\end{equation}
+This leads to the definition of the \emph{mass fraction}, 
+\begin{equation}
+c_i \equiv \frac{m_i}{m}=\frac{\rho_i}{\rho}.\label{eq:def-c-chi}
+\end{equation}
+Summing (\ref{eq:prhoRt-chi}) over all components,
+\begin{align}
+  \sum_{i} p_i &= \sum_{i} \rho_i R_i T,\nonumber \\
+  p &= \left( \sum_{i} \rho_i R_i \right)T \equiv \rho R T. \label{eq:def-R-mix}
+\end{align}
+Note that (\ref{eq:def-R-mix}) \emph{defines} the gas constant of the
+mixture. Proceeding, 
+\begin{align}
+  R &= \frac{\sum_{i} \rho_i R_i}{\rho}\nonumber \\
+  &= \frac{\sum_{i} \frac{m_i}{V}R_i}{\frac{m}{V}}\nonumber\\
+  &= \sum_{i} \frac{m_i}{m} R_i = \sum_{i} c_i R_i. \label{eq:cchi-Rrchi}
+\end{align}
+
+By the same token, the \emph{mean molar mass} is
+\begin{equation}
+  M = \sum_{i} x_i M_i = \frac{\sum_i n_i M_i}{n} = \frac{m}{n}.\label{eq:mnMagain}
+\end{equation}
+Note how (\ref{eq:mnMagain}) recovers (\ref{eq:mnM}) explicitly for
+the mixture.  Finally, $R$ for the mixture can be obtained from (\ref{eq:cchi-Rrchi}):
+\begin{align}
+  R &= \frac{1}{m} \left( \sum_i m_i R_i\right)  \nonumber \\
+    &= \frac{1}{m} \left( \sum_i n_i M_i R_i\right)  \nonumber \\
+    &= \frac{1}{m} \left( \sum_i n_i R^{\text{*}}\right) = \frac{1}{m}
+  \left( \sum_i n_i\right) R^{\text{*}} \nonumber \\
+    &= \frac{n}{m} R^{\text{*}}  = \frac{R^{\text{*}}}{M}{\,}, \label{eq:Rmixagain}
+\end{align}
+Equation (\ref{eq:Rmixagain}) is the same as (\ref{eq:RRM}), but now
+obtained explicitly for the mixture.
+
+The atmosphere is often modeled in a simplified way as a mixture of 2
+gases: the main varying component, water vapor, and ``dry air''. The dry
+air component is equivalent to the mixture of all other
+components. Two variables needed for the calculations involving moist
+air (water vapor and dry air) are the dry air mean molar mass $M_d$
+and the dry air gas constant $R_d$. They can be obtained from
+published gas concentrations in a standard atmosphere.
+
+
+
+Table \ref{tab:ppgas} shows several sources of concentrations of gases
+in a dry atmosphere. The standard atmosphere is defined in 
+\cite{coesa1976standard}; The 1\rst\ edition of
+\cite{iribarne.godson--atmospheric} predates it a little bit, while a
+relatively recent reference of dry atmosphere components is 
+\cite{wallace2006atmospheric}.
+Non-academic references are 
+\cite{wikipedia--atmosphere-of-earth} and \cite{co2--earth}; the
+latter reports a molar fraction of 414{.}11 for 
+CO\sub{2} in 2020/03/05.
+
+
+To ensure consistency, all molar mass values were obtained in
+\cite{nist2020search}. In table \ref{tab:ppgas}, the CO\sub{2}
+concentration increases in time.  However, for several constituents
+the concentrations do not change (por example, for Argon in COE, WAL e
+WIK): it appears that these concentrations have been reproduced in the
+several references without more recent measurements. Because of this,
+the concentrations do not always sum up to 1. In the absence of
+comprehensive and recent measurements, we made small adjustments to
+the components' concentrations heuristically to eforce that they sum
+to 1 in the adopted values, in the last column.
+
+
+
+
+
+
+
+\newcommand{\Munit}{$(\mathrm{g\,mol^{-1}})$}
+\newcommand{\Runit}{$(\mathrm{J\,kg^{-1}\,K^{-1}})$}
+
+
+\begin{table}\centering
+\caption{Composition of a dry atmosphere according to: IRI \citep{iribarne.godson--atmospheric},
+  COE \citep{coesa1976standard}, WAL \citep{wallace2006atmospheric},
+  WIK \citep{wikipedia--atmosphere-of-earth} and ADV (adopted
+  values). After \protect\cite{dias2021revisao}.
+ \label{tab:ppgas}}
+\begin{tabular}{rclllll}
+\hline
+\toprule
+Gas       & $M_i$      & $x_i$        & $x_i$              & $x_i$             & $x_i$             & $x_i$        \\
+          & \Munit     & IRI          & COE                & WAL               & WIK               & ADV          \\
+\midrule
+N\sub{2}  & 28{.}0134  & 0{.}78090000 & 0{.}7808{4}000  & 0{.}7808{4}000 & 0{.}7808{4}000 & 0{.}78078700 \\
+O\sub{2}  & 31{.}9988  & 0{.}20950000 & 0{.}20947{6}00  & 0{.}2094{6}000 & 0{.}2094{6}000 & 0{.}20943200 \\
+Ar        & 39{.}948   & 0{.}00930000 & 0{.}0093{4}000  & 0{.}0093{4}000 & 0{.}0093{4}000 & 0{.}00934000 \\
+CO\sub{2} & 44{.}0095  & 0{.}00030000 & 0{.}00031{4}00  & 0{.}00037{9}00 & 0{.}00040{7}00 & 0{.}00041390 \\
+Ne        & 20{.}1797  & --           & 0{.}0000181{8}  & 0{.}0000181{8} & 0{.}0000181{8} & 0{.}00001818 \\
+He        & 4{.}002602 & --           & 0{.}0000052{4}  & 0{.}0000052{4} & 0{.}0000052{4} & 0{.}00000524 \\
+CH\sub{4} & 16{.}0425  & --           & 0{.}00000{2}00  & 0{.}000001{7}0 & 0{.}000001{8}0 & 0{.}00000170 \\
+Kr        & 83{.}798   & --           & 0{.}0000011{4}  & --                & 0{.}0000011{4} & 0{.}00000110 \\
+H\sub{2}  & 2{.}01588  & --           & 0{.}0000005{5}  & 0{.}0000005{6} & 0{.}0000005{5} & 0{.}00000055 \\
+N\sub{2}O & 44{.}0128  & --           & --                 & 0{.}0000003{1} & --                & 0{.}00000033 \\
+Xe        & 131{.}293  & --           & 0{.}00000008{7} & --                & --                & --           \\
+\midrule
+soma      &            & 1{.}00000000 & 0{.}99999715       & 1{.}00004499      & 1{.}00007391      & 1{.}00000000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+\begin{table}\centering
+  \caption{Values of $M_d$ and $R_d$ reported in the references and
+    recalculated from table \ref{tab:ppgas}. After \protect\cite{dias2021revisao}.\label{tab:msrs}}
+    \begin{tabular}{rllll}
+      \toprule
+      Fonte & $M_d$ (rep) & $M_d$ (calc) & $R_d$ (rep) & $R_d$ (calc) \\
+            & \Munit      & \Munit       & \Runit      & \Runit       \\
+      \midrule
+      IRI   & 28{.}9640   & 28{.}9641    & 287{.}0500  & 287{.}0607   \\
+      COE   & 28{.}9644   & 28{.}9644    & 287{.}0580  & 287{.}0569   \\
+      WAL   & 28{.}9700   & 28{.}9667    & 287{.}0000  & 287{.}0484   \\
+      WIK   & --          & 28{.}9680    & --          & 287{.}0436   \\
+      ADV   & --          & 28{.}9659    & --          & 287{.}0429   \\
+    \bottomrule      
+    \end{tabular}
+\end{table}
+
+
+Because different sources use slightly different values of molar
+masses and the universal gas constant, there are small differences
+between their reported values and a recalculation using the most
+recent values reported in \cite{nist2020search}. I calculated $R_d$
+using pressure and temperature of a standard atmosphere at sea level,
+$p = 101\,325\,\mathrm{Pa}$ e $T = 288.15\,\mathrm{K}$
+\citep{coesa1976standard}. Instead of $M$ and $R$ for a generic
+mixture, I now use $M_d$ and $R_d$, which are calculated as follows:
+(\ref{eq:fracoes-gas}) is used to calculate $p_i$; para o cálculo da
+pressão parcial $p_i$; (\ref{eq:Rchidef}) for the gas constants $R_i$;
+(\ref{eq:prhoRt-chi}) for the densities $\rho_i$; (\ref{eq:mnMagain})
+to obtain $M_d$ e (\ref{eq:cchi-Rrchi}) to obtain $R_d$. Results are
+shown in table \ref{tab:msrs}.
+
+In \texttt{atmgas}, the molar masses adopted are from column $M_i$ of
+table \ref{tab:ppgas}, and $M_d$ and $R_d$ are from line ADV of table
+\ref{tab:msrs}. 
+
+\part{Constants and procedures}
+
+\section{Constants}
+
+Gas names are used to index associative arrays. The valid gas names
+are \texttt{"DRY", "N2", "O2", "AR", "H2O", "CO2", "NE", "HE", "KR",
+  "XE", "CH4", "H2", "O3", "N2O"} and correspond to those in table
+\ref{tab:ppgas}, except for water vapor (\texttt{"H2O"}). The
+following associative arrays are defined:
+\begin{mydescription}{2cm}
+  \item[\texttt{Mmol}] The molar masses in $\mathrm{kg\,mol^{-1}}$.
+  \item[\texttt{Rgas}] The gas constants $R_i$ in $\mathrm{J\,kg^{-1}\,K^{-1}}$.
+\end{mydescription}
+For example,
+\begin{lstlisting}[style=lstsimple-frame]
+Mmol["N2"] = 2.80134000e-02
+Rgas["N2"] = 2.96803052e+02
+\end{lstlisting}
+
+In adition, \texttt{Ru} is the universal gas constant, and
+\texttt{Rd}, \texttt{Rv}, \texttt{Rc} are defined as useful aliases
+for \texttt{Rgas["DRY"]}, \texttt{Rgas["H2O"]}, \texttt{Rgas["CO2"]}.
+
+The full definition of \texttt{Mmol} is
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'const Mmol' -A15 atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none,
+  title={ The \texttt{Mmol} associative array of molar masses ($\mathrm{kg\,mol^{-1}}$).}
+]{xtract.txt}
+
+
+\section{\texttt{x2rho}: convert from molar fraction to density}
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'inline proc x2rho' -A5 atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none,
+  title={ \texttt{x2rho}: converts \texttt{x}
+    in molar fraction (volumetric concentration) (parts per thousand,
+    million, billion, etc.) to density
+    ($\mathrm{kg\,m^{-3}}$).}
+]{xtract.txt}
+
+
+
+
+
+\section{\texttt{viscair}: dynamic viscosity of air}
+
+From \cite{montgomery--viscosity-air}.
+
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc viscair' -A2
+  atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none,
+  title={ \texttt{viscair}: dynamic viscosity of air
+    ($\mathrm{Pa\,s}$).}
+]{xtract.txt}
+
+\section{\texttt{difmom}: kinematic viscosity of air}
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc difmom' -A4
+  atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none,
+  title={ \texttt{difmom}: kinematic viscosity of air
+    ($\mathrm{m^2\,s^{-1}}$).}
+]{xtract.txt}
+
+\section{\texttt{difheat}: thermal diffusivity of air}
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc difheat' -A4
+  atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none,
+  title={ \texttt{difheat}: thermal diffusivity of air
+    ($\mathrm{m^2\,s^{-1}}$).}
+]{xtract.txt}
+
+\section{\texttt{difvap}: diffusivity of water vapor in air}
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc difvap' -A4
+  atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none,
+  title={ \texttt{difvap}: thermal diffusivity of air
+    ($\mathrm{m^2\,s^{-1}}$).}
+]{xtract.txt}
+
+
+\section{\texttt{rho2x}: convert density to molar fraction}
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc rho2x' -A5
+  atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none,
+  title={ \texttt{rho2x}: convert density to molar fraction.}
+]{xtract.txt}
+
+
+\section{\texttt{pressalt}: atmospheric pressure as a function of altitude}
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc pressalt' -A2
+  atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none, title={
+    \texttt{pressalt}: atmospheric pressure as a function of altitude
+    in a standard atmosphere.}  ]{xtract.txt}
+
+
+
+\bibliography{abbrevs,all}
+\bibliographystyle{apalike}
+\end{document}
+
+

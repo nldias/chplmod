@@ -1,0 +1,201 @@
+// =============================================================================
+// ==> nloess: my implementation of the loess algorithm
+//
+// 2022-04-22T12:11:44 a new star is born
+// 2022-04-22T17:34:40 essentially done
+// =============================================================================
+
+var xdata = [0.5578196, 2.0217271, 2.5773252, 3.4140288, 4.3014084,
+          4.7448394, 5.1073781, 6.5411662, 6.7216176, 7.2600583,
+          8.1335874, 9.1224379, 11.9296663, 12.3797674, 13.2728619,
+          14.2767453, 15.3731026, 15.6476637, 18.5605355, 18.5866354,
+          18.7572812];
+var ydata = [18.63654, 103.49646, 150.35391, 190.51031, 208.70115,
+          213.71135, 228.49353, 233.55387, 234.55054, 223.89225,
+          227.68339, 223.91982, 168.01999, 164.95750, 152.61107,
+          160.78742, 168.55567, 152.42658, 221.70702, 222.69040,
+          243.18828];
+
+// -----------------------------------------------------------------------------
+// I use tricubic as a scalar function only
+// -----------------------------------------------------------------------------
+proc tricubic(const in x: real): real {
+   return (1-abs(x)**3)**3 ;
+}
+
+proc normalize_array(
+   const ref a: [] real,      // raw data
+   ref n_a: [] real           // normalized data
+   ): (real,real)
+   where (a.rank == 1) && (a.shape == n_a.shape) {
+   var a_min = min(a);
+   var a_max = max(a);
+   n_a = (a - a_min) / (a_max - a_min);
+   return (a_min, a_max);
+}
+
+private var
+   degree = 1;      // degree of linear regression
+private var
+   xx_min,          // minimum of xx data
+   xx_max,          // maximum of xx data
+   yy_min,          // minimum of yy data
+   yy_max:          // maximum of yy data
+   real;
+private var ldom = {0..0};    // data domain initially empty
+private var
+   n_xx,            // normalized x data
+   n_yy:            // normalized y data
+   [ldom] real;
+// -----------------------------------------------------------------------------
+// --> initialize loess: normalize data arrays making local copies to
+// n_xx and n_yy via normalize_array
+// -----------------------------------------------------------------------------
+proc init_loess(ref xx: [] real, ref yy: [] real, in deg: int = 1)
+   where (xx.shape == yy.shape) {
+   ldom = xx.indices;
+   assert(ldom == yy.indices);               // the least we can expect
+   (xx_min,xx_max) = normalize_array(xx,n_xx);
+   (yy_min,yy_max) = normalize_array(yy,n_yy);
+   degree = deg;
+   return;
+}
+
+use ssr;
+// -----------------------------------------------------------------------------
+// --> get_min_range: the indices of the window smallest
+// -----------------------------------------------------------------------------
+proc get_min_range(
+   ref distances: [] real,    // the local distances
+   in window: int             // the window size
+   ): [0..#window] int where distances.rank == 1 {      
+   var dinds = distances.indices;
+   var indx = [i in dinds] i ;
+   indxquickselect(indx,distances,dinds.first,dinds.last,window);
+   var min_range =  [k in 0..#window] indx[k];
+   return min_range;
+}
+
+// -----------------------------------------------------------------------------
+// --> get_weights: I suspect that max_distance == distances[indx[wind-1]]
+// because of partial sorting
+// -----------------------------------------------------------------------------
+proc get_weights(
+   ref distances: [] real,
+   ref min_range: [] int,
+   ref weights: [] real
+   ) where (min_range.shape == weights.shape) {
+   var max_distance = min(real);
+   var wind = min_range.size;
+// -----------------------------------------------------------------------------
+// find maximum distance
+// -----------------------------------------------------------------------------
+   for k in 0..#wind do {
+      if distances[minrange[k]] > max_distance then {
+         max_distance = distances[min_range[k]];
+      }
+   }
+// -----------------------------------------------------------------------------
+// normalize with weights
+// -----------------------------------------------------------------------------
+   for k in 0..#wind do {
+      weights[k] = tricubic(distances[min_range[k]]/max_distance);
+   }
+}
+
+
+
+
+// -----------------------------------------------------------------------------
+// we will need to come back to normalize
+// -----------------------------------------------------------------------------
+inline proc normalize_x(
+   const in x: real        // the data array?
+   ): real {
+   return (x - xx_min)/(xx_max - xx_min);
+}
+
+inline proc denormalize_y(
+   const in y: real) : real {
+   return y * (yy_max - yy_min) + yy_min;
+}
+
+use matrix;
+// -----------------------------------------------------------------------------
+// --> estimate is the core less algorithm
+// -----------------------------------------------------------------------------
+proc estimate(
+   in x: real,                // point around which to do linear regression
+   in m: int,                 // size of neighborhood == window
+   in n: int = 1              // degree of linear regression == degree
+   ) {
+   var n_x = normalize_x(x);  // normalize independent variable
+// -----------------------------------------------------------------------------
+// do I really need to calculate all distances for each point?
+// -----------------------------------------------------------------------------
+   var distances = abs(n_x - n_xx);
+   var min_range: [0..window-1] int;
+   var weights: [0..window-1] real;
+   get_min_range(distances, window, min_range);
+   get_weights(distances, min_range, weights);
+// -----------------------------------------------------------------------------
+// estimate beta = [Xtr(n+1,m)W(m,m)X(m,n+1)]^(-1)Xtr(n+1,m)W(m,m)n_yy(m,1)
+// -----------------------------------------------------------------------------      
+   var Id: [onediag(window)] real = 1.0;
+   var W: [1..m,1..m] real;
+   var X: [1..m,0..n] real;
+   dot_mm(Id,weights,W);
+// -----------------------------------------------------------------------------
+// trickiest part is to build X
+// -----------------------------------------------------------------------------
+   for i in 1..m do {
+      X[i,0] = 1.0 ;
+      X[i,1] = n_xx[i];
+      for j in 2..n do {
+         X[i,j] = (n_xx[i])**j;
+      }
+   }
+   var A: [0..n,1..m] real;
+   var B: [0..n,0..n] real;
+   var C: [0..n,1..m] real;
+   var beta: [0..n] real;
+   dot_mtm(X,W,A);
+   dot_mm(Aux,X,B);
+   minvgj(B);
+   dot_mmt(B,X,A); // re-using A !!!
+   dot_mm(A,W,C);
+   dot_mm(C,n_yy,beta); // finally the parameters
+   var y = dot_vtv(beta,n_xx); // and the local estimate!         
+   return denormalize_y(y);
+}
+
+
+
+
+// def main():
+//     xx = np.array([0.5578196, 2.0217271, 2.5773252, 3.4140288, 4.3014084,
+//                    4.7448394, 5.1073781, 6.5411662, 6.7216176, 7.2600583,
+//                    8.1335874, 9.1224379, 11.9296663, 12.3797674, 13.2728619,
+//                    14.2767453, 15.3731026, 15.6476637, 18.5605355, 18.5866354,
+//                    18.7572812])
+//     yy = np.array([18.63654, 103.49646, 150.35391, 190.51031, 208.70115,
+//                    213.71135, 228.49353, 233.55387, 234.55054, 223.89225,
+//                    227.68339, 223.91982, 168.01999, 164.95750, 152.61107,
+//                    160.78742, 168.55567, 152.42658, 221.70702, 222.69040,
+//                    243.18828])
+
+//     loess = Loess(xx, yy)
+
+//     for x in xx:
+//         y = loess.estimate(x, window=7, use_matrix=False, degree=1)
+//         print(x, y)
+
+
+// if __name__ == "__main__":
+//     start = time.time()
+
+//     main()
+
+//     end = time. time()
+//     print(end - start)
+

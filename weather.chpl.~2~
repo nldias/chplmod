@@ -1,0 +1,34 @@
+// use IO.FormattedIO;
+config const describe = false;
+const doc = "\
+=================================================================================\
+==> weather: meteorology stuff, more general than evap.                          \
+=================================================================================\
+";
+if describe then {
+   writeln(doc);
+   exit(0);
+}
+param TwoPi = 2*pi;
+use nmth only hypot;
+// -----------------------------------------------------------------------------
+// --> WindDir: get wind direction from (u,v) (zonal, meridional) wind.
+// -----------------------------------------------------------------------------
+inline proc WindDir(
+   const in u: real,          // zonal wind
+   const in v: real           // meridional wind
+   ): real {
+   var theta = atan2(v,u);
+   return mod(theta-halfPi,Twoi);
+}
+// -----------------------------------------------------------------------------
+// --> WindSpped: get wind speed from (u,v) (zonal, meridional) wind.
+// -----------------------------------------------------------------------------
+inline proc WindSpeed(
+   const in u: real,          // zonal wind
+   const in v: real           // meridional wind
+   ): real {
+   return hypot(u,v);
+}
+   
+

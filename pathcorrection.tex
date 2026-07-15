@@ -1,0 +1,147 @@
+% ------------------------------------------------------------------------------
+% attointern: new version of attointer
+% ------------------------------------------------------------------------------
+\documentclass[12pt]{article}
+\usepackage[a4paper,left=2.5cm,right=2.5cm,top=2.5cm,bottom=2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\usepackage{newtxtext}
+\usepackage[ttscale=0.875]{libertine}
+\usepackage[libertine,cmintegrals,cmbraces]{newtxmath}
+\usepackage{authblk}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage[round]{natbib}
+\usepackage[table,xcdraw,svgnames]{xcolor}
+\usepackage{booktabs}
+\usepackage{tabu}
+\usepackage{soul}
+\usepackage{url}
+\usepackage{lineno}
+
+
+\DeclareMathOperator{\logmod}{logmod}%
+\DeclareMathOperator{\expmod}{expmod}%
+\DeclareMathOperator{\sign}{sign}%      2016-12-16T15:04:44
+
+
+\newcommand{\sub}[1]{\textsubscript{#1}}
+\newcommand{\super}[1]{\textsuperscript{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+\setstcolor{red}
+%~ \newcommand{\correc}[2]{{\color{red} #1}\,{\color{blue} #2}}
+\newcommand{\correc}[2]{{\color{red}\st{#1}}\,{\color{blue} #2}}
+%\newcommand{\correc}[1]{{\color{blue} #1}}
+
+% -----------------------------------------------------------------------------
+% degree
+% -----------------------------------------------------------------------------
+\newcommand{\degree}{\ensuremath{^\circ}}
+\newcommand{\ape}{~}
+\newcommand{\pretit}[1]{}
+\newcommand{\retrieved}{Retrieved  in}
+\newcommand{\available}{Available  at}
+\newcommand{\submitted}{submitted}
+\newcommand{\edone}{\rst }
+\newcommand{\edtwo}{\nd\ }
+\newcommand{\edthree}{\rd }
+\newcommand{\ednth}{\th }
+
+
+
+\clubpenalty=10000
+\widowpenalty=10000
+
+
+\begin{document}
+
+\setstretch{1.6}
+\linenumbers
+
+
+
+
+\title{Path shadowing correction}
+
+  \author[1]{Nelson Luís Dias}
+
+  
+
+\affil[1]{Department of Environmental Engineering, Federal University of Paraná,  Brazil. }
+
+
+\maketitle
+
+
+
+
+
+
+
+
+
+
+
+
+{ \linelabel{lin:begin-explainshadow} When shadowing corrections are applied
+  \linelabel{lin:only} (only to the CSAT3s) to data that passed QC , this is always done
+  \emph{before} any other processing: in these cases, other procedures
+  such as calculation of planar fit rotation matrices and the
+  rotations themselves, calculation of means and statistics, etc., are
+  performed on the corrected data.  \linelabel{lin:end-explainshadow}}
+
+From the $(u,v,w)$ in an orthogonal system measured by the CSAT3,
+we recover the path components
+\cite[Eq. (10)]{horst.oncley--correctionstoinertial} from
+\begin{align}
+  u_a &= -u \cos(\phi) + w\sin(\phi), \\
+  u_b &= \frac{u + \sqrt{3}v}{2}\cos(\phi) + w\sin(\phi), \\
+  u_c &= \frac{u - \sqrt{3}v}{2}\cos(\phi) + w\sin(\phi),
+\end{align}
+where $\phi = \pi/3$ is the angle between the CSAT3 paths and the horizontal.
+Next, we calculate the instantaneous absolute value of the (uncorrected) wind
+vector,
+\begin{equation}
+S = \sqrt{u^2 + v^2 + w^2},\label{eq:Sfrom-uvw}
+\end{equation}
+and then, for each path component, the angle between the 
+wind vector and that path:
+\begin{equation}
+\theta_{\alpha} = \arccos(u_{\alpha}/S),
+\end{equation}
+where $\alpha = a, b, c$. Then the path components are corrected by \citep{horst.semmer.ea--correction}
+\begin{equation}
+u_{\alpha} := \frac{u_{\alpha}}{0.84 + 0.16\sin(\theta_{\alpha})}.
+\end{equation}
+where $:=$ stands for the usual assignment in computer languages.
+The orthogonal components are then recovered by an inverse rotation
+\cite[Eq. (9)]{horst.oncley--correctionstoinertial}:
+\begin{align}
+  u &= \frac{-2u_a + u_b + u_c}{3\cos(\phi)}, \label{eq:new-u}\\
+  v &= \frac{u_b - u_c}{\sqrt{3}\cos(\phi)},\label{eq:new-v}\\
+  w &= \frac{u_a + u_b + u_c}{3\sin(\phi)}.\label{eq:new-w}
+\end{align}
+Note  that the newly recovered $(u,v,w)$ is different from the
+raw measurement; therefore, one needs to iterate trough
+(\ref{eq:Sfrom-uvw})--(\ref{eq:new-w}) until convergence is achieved
+in all components. In this work, the convergence criterion is that the
+maximum difference over the three components is less than
+$\mathrm{0.001\,m\,s^{-1}}$, which is well below the stated accuracy
+($0.01\,\mathrm{m\,s^{-1}}$) of the CSAT3.
+
+{ \linelabel{lin:begin-refshadow} Campbell's CSAT3B manual
+  \cite[][section 7.1.3]{csi--csat3b} mentions that the option to
+  apply the shadowing correction uses 3
+  iterations. \cite{zhou2018recovery} give a very detailed description
+  of the shadowing correction algorithm, and impose, as done here, a
+  convergence criterion of $\mathrm{1\,mm\,s^{-1}}$ on each velocity
+  component. They report a maximum of 3 iterations until
+  covergence. In our case we found that a maximum of 6 iterations were
+  needed. \linelabel{lin:end-refshadow}}
+
+
+\bibliographystyle{plainnat-lastname}
+\bibliography{abbrevs,all}
+
+\end{document}

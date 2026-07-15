@@ -1,0 +1,186 @@
+// -----------------------------------------------------------------------------
+// spline: translate numerical recipes spline
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// --> spline: Given arrays ax[1..n] and ay[1..n] containing a tabulated
+// function, i.e., ay[i] = f (ax[i] ), with x1 < x2 < ... < xn, and given values
+// yp1 and ypn for the first derivative of the interpolating function at points
+// 1 and n, respectively, this routine returns an array ay2[1..n] that contains
+// the second derivatives of the interpolating function at the tabulated points
+// xi . If yp1 and/or ypn are equal to nan, the routine is signaled to set the
+// corresponding boundary condition for a natural spline, with zero second
+// derivative on that boundary.
+// -----------------------------------------------------------------------------
+proc spline(
+   const ref ax: [] real,
+   const ref ay: [] real,
+   ref ay2: [] real,
+   yp1: real = nan,
+   ypn: real = nan
+   ) where ( ax.rank == 1 && ay.rank == 1 && ay2.rank == 1) {
+   const n = ax.size;
+   assert (ay.size == n);
+   assert (ay2.size == n);
+   ref x = ax.reindex(1..n);
+   ref y = ay.reindex(1..n);
+   ref y2 = ay2.reindex(1..n);
+   var u: [1..n-1] real;
+// -----------------------------------------------------------------------------
+// The lower boundary condition is set either to be "natural"
+// -----------------------------------------------------------------------------
+   if isNan(yp1) then { 
+      y2[1]=0.0;
+      u[1]=0.0;
+   }
+// -----------------------------------------------------------------------------
+// or else to have a specified first derivative.
+// -----------------------------------------------------------------------------
+   else { 
+      y2[1] = -0.5;
+      u[1]=(3.0/(x[2]-x[1]))*((y[2]-y[1])/(x[2]-x[1])-yp1);
+   }
+// -----------------------------------------------------------------------------
+// This is the decomposition loop of the tridiagonal algorithm. y2 and u are
+// used for temporary storage of the decomposed factors.
+// -----------------------------------------------------------------------------
+   for i in 2..n-1 do {
+      var sig=(x[i]-x[i-1])/(x[i+1]-x[i-1]);
+      var p=sig*y2[i-1]+2.0;
+      y2[i]=(sig-1.0)/p;
+      u[i]=(y[i+1]-y[i])/(x[i+1]-x[i]) - (y[i]-y[i-1])/(x[i]-x[i-1]);
+      u[i]=(6.0*u[i]/(x[i+1]-x[i-1])-sig*u[i-1])/p;
+   }
+// -----------------------------------------------------------------------------
+// The upper boundary condition is set either to be "natural" or else to have a
+// specified first derivative
+// -----------------------------------------------------------------------------
+   var qn,un: real;
+   if isNan(ypn) then { 
+      qn=0.0;
+      un=0.0;
+   }
+   else {
+      qn=0.5;
+      un=(3.0/(x[n]-x[n-1]))*(ypn-(y[n]-y[n-1])/(x[n]-x[n-1]));
+   }
+// -----------------------------------------------------------------------------
+// This is the backsubstitution loop of the tridiagonal algorithm. 
+// -----------------------------------------------------------------------------
+   y2[n]=(un-qn*u[n-1])/(qn*y2[n-1]+1.0);
+   for i in 1..n-1 by -1 do {
+      y2[i]=y2[i]*y2[i+1]+u[i]; 
+   }
+   return ;
+}
+
+// -----------------------------------------------------------------------------
+// It is important to understand that the program spline is called only once to
+// process an entire tabulated function in arrays xi and yi . Once this has been
+// done, values of the interpolated function for any value of x are obtained by
+// calls (as many as desired) to a separate routine splint (for "spline
+// interpolation")
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// --> splint: Given the arrays ax[1..n] and ay[1..n], which tabulate a function
+// (with the xai ’s in order), and given the array ay2[1..n], which is the
+// output from spline above, and given a value of xc, this routine returns a
+// cubic-spline interpolated value yc.
+// -----------------------------------------------------------------------------
+proc splint(
+   in xc: real,
+   const ref ax: [] real,
+   const ref ay: [] real,
+   const ref ay2: [] real): real
+   where (ax.rank == 1 && ay.rank == 1 && ay2.rank == 1 ): real {
+   var n = ax.size;
+   ref x = ax.reindex(1..n);
+   ref y = ay.reindex(1..n);
+   ref y2 = ay2.reindex(1..n);
+// -----------------------------------------------------------------------------
+// We will find the right place in the table by means of bisection. This is
+// optimal if sequential calls to this routine are at random values of x. If
+// sequential calls are in order, and closely spaced, one would do better to
+// store previous values of klo and khi and test if they remain appropriate on
+// the next call. klo and khi now bracket the input value of x.
+// -----------------------------------------------------------------------------
+   var klo=1;
+   var khi=n;
+   while (khi-klo > 1) {
+      var k=(khi+klo)/2;
+      if (x[k] > xc) then {
+         khi=k;
+      }
+      else {
+         klo=k;
+      }
+   }
+   var h=xa[khi]-xa[klo]; 
+// -----------------------------------------------------------------------------
+// The xa’s must be distinct. 
+// -----------------------------------------------------------------------------
+   if (h == 0.0) then {
+      halt("Bad ax input to routine splint");
+   }
+   var a=(x[khi]-xc)/h;
+   var b=(xc-x[klo])/h;
+// -----------------------------------------------------------------------------
+//   Cubic spline polynomial is now evaluated.
+// -----------------------------------------------------------------------------
+   var yc =a*y[klo]+b*y[khi]+((a*a*a-a)*y2[klo]+(b*b*b-b)*y2[khi])*(h*h)/6.0;
+   return yc;   
+}
+
+// -----------------------------------------------------------------------------
+// --> splintder: Given the arrays ax[1..n] and ay[1..n], which
+// tabulate a function (with the xai ’s in order), and given the array
+// ay2[1..n], which is the output from spline above, and given a value
+// of xc, this routine returns a cubic-spline interpolated value yc
+// and the derivative yp
+// -----------------------------------------------------------------------------
+proc splintder(
+   in xc: real,
+   const ref ax: [] real,
+   const ref ay: [] real,
+   const ref ay2: [] real): (real,real)
+   where (ax.rank == 1 && ay.rank == 1 && ay2.rank == 1 ) {
+   var n = ax.size;
+   ref x = ax.reindex(1..n);
+   ref y = ay.reindex(1..n);
+   ref y2 = ay2.reindex(1..n);
+// -----------------------------------------------------------------------------
+// We will find the right place in the table by means of bisection. This is
+// optimal if sequential calls to this routine are at random values of x. If
+// sequential calls are in order, and closely spaced, one would do better to
+// store previous values of klo and khi and test if they remain appropriate on
+// the next call. klo and khi now bracket the input value of x.
+// -----------------------------------------------------------------------------
+   var klo=1;
+   var khi=n;
+   while (khi-klo > 1) {
+      var k=(khi+klo)/2;
+      if (x[k] > xc) then {
+         khi=k;
+      }
+      else {
+         klo=k;
+      }
+   }
+   var h=xa[khi]-xa[klo]; 
+// -----------------------------------------------------------------------------
+// The xa’s must be distinct. 
+// -----------------------------------------------------------------------------
+   if (h == 0.0) then {
+      halt("Bad ax input to routine splint");
+   }
+   var a=(x[khi]-xc)/h;
+   var b=(xc-x[klo])/h;
+// -----------------------------------------------------------------------------
+//   Cubic spline polynomial is now evaluated.
+// -----------------------------------------------------------------------------
+   var yc =a*y[klo]+b*y[khi]+((a*a*a-a)*y2[klo]+(b*b*b-b)*y2[khi])*(h*h)/6.0;
+   var yp =  (y[khi] - y[klow])/h -
+      ((3.0*a**2 -1.0)/6.0)*h*y2[klow] + ((3.0*b**2 - 1.0)/6.0)*h*y2[khi];
+   return (yc,yp);   
+}

@@ -1,0 +1,14 @@
+use nstat;
+use IO only openWriter;
+use prob only fillNormal;
+use Math;
+const n = 200;
+var dx = 2*pi/n ;
+var xx = [ i in 0..n-1] i*dx;
+var yy = sin(xx);
+const fou = openWriter("exlow.out");
+for i in 0..n-1 do {
+   fou.writef("%12.8dr %12.8dr\n",xx[i],yy[i]);
+}
+fou.close();
+   

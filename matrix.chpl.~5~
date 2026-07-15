@@ -1,0 +1,359 @@
+// =============================================================================
+// ==> matrix: matrix-vector operations
+//
+// 2022-04-22T21:18:39 cosmetics
+// =============================================================================
+use IO;
+// -----------------------------------------------------------------------------
+// --> dot_vtv: calculates the dot product of x and y
+// -----------------------------------------------------------------------------
+proc dot_vtv(
+   const ref x: [] real,
+   const ref y: [] real
+   ): real where (x.rank == 1) {
+   assert (x.shape == y.shape);
+   var sum = (+ reduce (x*y)) ;
+   return sum;
+}
+// -----------------------------------------------------------------------------
+// --> dot_mv: calculates the product of matrix A[m,n] and vector x[n]
+// -----------------------------------------------------------------------------
+proc dot_mv(const ref aA: [] real, const ref ax: [] real, ref ay: [] real) {
+   const (m,n) = aA.shape;
+   assert (ax.shape == (n,));
+   assert (ay.shape == (m,));
+   ref A = aA.reindex({1..m,1..n});
+   ref x = ax.reindex({1..n});
+   ref y = ay.reindex({1..m});
+   forall i in 1..m do {
+      var sum = 0.0;
+      foreach j in 1..n do {
+         sum += A[i,j]*x[j];
+      }
+      y[i] = sum;
+   }
+}
+// -----------------------------------------------------------------------------
+// --> dot_mm: calculates the product of matrix a[m,n] and b[n,p]; puts result
+// in c[m,p]
+//
+// Nelson Luis Dias
+// created 22 jun 1994 
+// updated 22 jun 1994
+//
+// 2021-04-17T12:51:56 translated from C to Chapel
+// -----------------------------------------------------------------------------
+proc dot_mm(
+   const ref aa: [] real, 
+   const ref bb: [] real,
+   ref cc: [] real
+) 
+{
+   const (m,n) = aa.shape;
+   const p = bb.shape[1];
+   assert(bb.shape == (n,p));
+   assert(cc.shape == (m,p));
+   ref a = aa.reindex({1..m,1..n});
+   ref b = bb.reindex({1..n,1..p});
+   ref c = cc.reindex({1..m,1..p});
+// -----------------------------------------------------------------------------
+// major loops: m lines, p cols
+// -----------------------------------------------------------------------------
+   forall i in 1..m do  {
+      forall j in 1..p do {
+         var aux = 0.0 ;
+         for k in 1..n do {
+            aux += a[i,k]*b[k,j] ;
+         }
+         c[i,j] = aux ;
+      }
+   } 
+}
+// -----------------------------------------------------------------------------
+// --> dot_mtm: calculates the product of matrix a'[m,n] and b[n,p] where a' is
+// the transpose of a[n,m] ; puts result in c
+//
+//
+// 2021-04-17T12:51:56 translated from C to Chapel
+// -----------------------------------------------------------------------------
+proc dot_mtm(
+   ref aa: [] real, 
+   ref bb: [] real,
+   ref cc: [] real
+) 
+{
+   const (n,m) = aa.shape;
+   const p = bb.shape[1];
+   assert(bb.shape == (n,p));
+   assert(cc.shape == (m,p));
+   ref a = aa.reindex({1..n,1..m});
+   ref b = bb.reindex({1..n,1..p});
+   ref c = cc.reindex({1..m,1..p});
+// -----------------------------------------------------------------------------
+// major loops: m lines, p cols
+// -----------------------------------------------------------------------------
+   forall i in 1..m do  {
+      forall j in 1..p do {
+         var aux = 0.0 ;
+         for k in 1..n do {
+            aux += a[k,i]*b[k,j] ;
+         }
+         c[i,j] = aux ;
+      }
+   } 
+}
+// -----------------------------------------------------------------------------
+// --> dot_mmt: calculates the product of matrix a[m,n] and b'[n,p]
+//     where b' is the transpose of b[p,n] ; puts result in c
+//
+// 2021-04-17T12:51:56 translated from C to Chapel
+// -----------------------------------------------------------------------------
+proc dot_mmt(
+   ref aa: [] real, 
+   ref bb: [] real,
+   ref cc: [] real
+) 
+{
+   const (m,n) = aa.shape;
+   const p = bb.shape[0];
+   assert(bb.shape == (p,n));
+   assert(cc.shape == (m,p));
+   ref a = aa.reindex({1..m,1..n});
+   ref b = bb.reindex({1..p,1..n});
+   ref c = cc.reindex({1..m,1..p});
+// ----------------------------------------------------------------------------
+// major loops: m lines, p cols
+// ----------------------------------------------------------------------------
+   forall i in 1..m do  {
+      forall j in 1..p do {
+         var aux = 0.0 ;
+         for k in 1..n do {
+            aux += a[i,k]*b[j,k] ;
+         }
+         c[i,j] = aux ;
+      }
+   } 
+}
+// -----------------------------------------------------------------------------
+// --> minvgj: matrix inversion via the Gauss-Jordan method
+// -----------------------------------------------------------------------------
+proc minvgj(ref wa: [] real) {
+// -----------------------------------------------------------------------------
+// is a a matrix? is it square?
+// -----------------------------------------------------------------------------
+   var n = wa.shape[0];
+   assert(wa.shape == (n,n));
+   ref a = wa.reindex({1..n,1..n}) ;    // reindex
+// -----------------------------------------------------------------------------
+// allocates memory for hv and p
+// -----------------------------------------------------------------------------
+   var dn : domain = {1..n} ;
+   var p : [dn] int ; 
+   var hv : [dn] real ;
+// -----------------------------------------------------------------------------
+// starts algorithm
+// -----------------------------------------------------------------------------
+   for j in dn do { 
+      p[j] = j;
+   }
+   for j in dn do {
+// -----------------------------------------------------------------------------
+// starts at the diagonal...
+// -----------------------------------------------------------------------------
+      var amax = abs(a[j,j]);
+      var r = j;
+// -----------------------------------------------------------------------------
+// this is probably pivoting
+// -----------------------------------------------------------------------------
+      for i in (j+1)..n do {
+         if ( abs(a[i,j]) > amax ) then {
+            amax = abs(a[i,j])   ;
+            r = i ;
+         } 
+      }
+// -----------------------------------------------------------------------------
+// this makes the alogrithm robust
+// -----------------------------------------------------------------------------
+      if ( amax < 1.0e-30 ) {
+         halt("pivot too small");
+      }
+// -----------------------------------------------------------------------------
+// now what ?
+// -----------------------------------------------------------------------------
+      if ( r > j ) then {
+         for k in dn do {
+            a[j,k] <=> a[r,k] ;
+         }
+         p[j] <=> p[r] ;
+      }
+// -----------------------------------------------------------------------------
+// and what ?
+// -----------------------------------------------------------------------------
+      var hr = 1.0/a[j,j];
+      for i in dn do {
+         a[i,j] = hr*a[i,j];
+      } 
+      a[j,j] = hr;
+      for k in dn do {
+         if ( k != j ) then {
+            for i in dn do {
+               if ( i != j ) then {
+                  a[i,k] = a[i,k] - a[i,j]*a[j,k];
+               }
+            }
+            a[j,k] = -hr*a[j,k];
+         }
+      }
+   }
+// -----------------------------------------------------------------------------
+// this is a back substitution kind of thing
+// -----------------------------------------------------------------------------
+   for i in dn do {
+      for k in dn do {
+         hv[p[k]] = a[i,k] ;
+      } 
+      for k in dn do {
+         a[i,k] = hv[k];
+      } 
+   } 
+}
+// -----------------------------------------------------------------------------
+// --> gauss
+//
+// Purpose: This program uses Gaussian Elimination with with pivoting to solve
+//          the problem A x =b.  Use is made of array offsets so that the
+//          indices go from 1 to n.
+//			
+// Author(s): R. Sureshkumar (10 January 1997)
+//            Modified by: Gregory J. McRae (22 October 1997)
+//
+// Address: Department of Chemical Engineering Room 66-372 Massachusetts
+//          Institute of Technology Cambridge, MA 02139 mcrae@mit.edu
+//
+// Usage:   gauss(a,b,x)
+//		   
+// a   - Matrix a[n,n]
+// b   - Right hand side vector b[n]
+// x   - Desired solution vector
+// n   - Matrix dimensions
+// -----------------------------------------------------------------------------
+proc gauss(ref wa: [] real, ref wb: [] real, ref wx: [] real)
+   where (wa.rank == 2 && wb.rank == 1 && wx.rank == 1) {
+   const (m,n) = wa.shape;
+   assert (m == n);
+   assert (wb.shape == (n,));
+   assert (wx.shape == (n,));
+   ref a = wa.reindex({1..n,1..n});
+   ref b = wb.reindex({1..n});
+   ref x = wx.reindex({1..n});
+   var xfac,temp,temp1,amax: real;
+// -----------------------------------------------------------------------------
+// Do the forward reduction step. 
+// -----------------------------------------------------------------------------
+   for k in 1..n-1 do {
+      amax = abs(a[k,k]) ;
+      var p = k;
+      for i in k+1..n do {   /* Find the row with largest pivot */
+         xfac = abs(a[i,k]);
+         if xfac > amax then {
+            amax = xfac;
+            p = i;
+         }
+      }
+      if p != k then {  /* Row interchanges */
+         b[k] <=> b[p];
+         for j in k..n do {
+            a[k,j] <=> a[p,j];
+         }
+      }
+      for i in k+1..n do {
+         xfac = a[i,k]/a[k,k];
+         for j in k+1..n do {
+            a[i,j] = a[i,j]-xfac*a[k,j];
+         }
+         b[i] = b[i]-xfac*b[k];
+      }
+   }
+// -----------------------------------------------------------------------------
+// Do the back substitution step 
+// -----------------------------------------------------------------------------
+   for j in 1..n do {
+      var k=n-j+1;
+      x[k] = b[k];
+      for i in k+1..n do {
+         x[k] = x[k]-a[k,i]*x[i];
+      }
+      x[k] = x[k]/a[k,k];
+   }
+}
+// /============================================================================
+// tdma: tri-diagonal matrix algorithm
+// /============================================================================
+// -----------------------------------------------------------------------------
+// --> it3d: iterates over the 3 "diagonals"
+// -----------------------------------------------------------------------------
+iter it3d(n: int) {      // return tridiagonal indices                  
+   for i in 1..n do {
+      for j in max(i-1,1)..min(i+1,n) do {
+         yield (i,j);               
+      }
+   }
+}
+// -----------------------------------------------------------------------------
+// --> it1d: iterates over 1 diagonal
+// -----------------------------------------------------------------------------
+iter it1d(n: int) {      // return diagonal indices                  
+   for i in 1..n do {
+      yield (i,i);               
+   }
+}
+// -----------------------------------------------------------------------------
+// --> threediag: returns the sparse subdomain
+// -----------------------------------------------------------------------------
+proc threediag(n: int) {
+   const D = {1..n,1..n};
+   const SD: sparse subdomain(D) = [(i,j) in it3d(n)] (i,j);
+   return SD;
+}
+proc onediag(n: int) {
+   const D = {1..n,1..n};
+   const S1D: sparse subdomain(D) = [(i,j) in it1d(n)] (i,j);
+   return S1D;
+}
+// -----------------------------------------------------------------------------
+// --> tridiag: the tdma algorithm
+//
+//     a[j]x[j-1] +   b[j]x[j] +     c[j]x[j+1] = d[j]
+// A[i,j-1]x[i-1] + A[i,j]x[j] + A[i,j+1]x[j+1] = y[j]
+//
+// to translate from Numerical Recipes:
+// a[j] == A[j-1,j]
+// b[j] == A[j,j]
+// c[j] == A[j,j+1]
+// d[j] == y[j]
+// -----------------------------------------------------------------------------
+proc tridiag(const A: [] real, const ay: [] real, ax: []real) {
+   const n = A.shape[0];                // the problem size                  
+   assert (A.domain == threediag(n));   // is A tridiag?                
+   assert (ax.shape == (n,));           // check x shape                
+   assert (ay.shape == (n,));           // check y shape                     
+   ref x = ax.reindex({1..n});          // reindex ax->x                     
+   const ref y = ay.reindex({1..n});    // reindex ay->y                
+   var gam: [2..n] real;                // work vector                       
+   if A[1,1] == 0.0 then {              // algorithm can fail #1
+      halt("tdma->tridiag, error 1");
+   }
+   var bet = A[1,1];
+   x[1] = y[1]/bet;
+   for j in 2..n do {                   // decomposition & forward subst
+      gam[j] = A[j-1,j]/bet;
+      bet = A[j,j] - A[j-1,j]*gam[j];
+      if bet == 0 then {                // algorithm can fail #2
+         halt("tdma->tridiag, error 2");
+      }
+      x[j] = (y[j] - A[j-1,j]*x[j-1])/bet;
+   }
+   for j in 1..n-1 by -1 do {           // back substitution
+      x[j] -= gam[j+1]*x[j+1];
+   }
+}

@@ -1,0 +1,46 @@
+\begin{thebibliography}{4}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[{Campbell Scientific, Inc.}(2023)]{csi--csat3b}
+{Campbell Scientific, Inc.}
+\newblock \emph{CSAT3B 3-D Sonic Anemometer with Integrated Electronics},
+  04/2023 edition, 2023.
+
+\bibitem[Horst and Oncley(2006)]{horst.oncley--correctionstoinertial}
+Horst, T.~W. and Oncley, S.~P.
+\newblock Corrections to inertial-range power spectra measured by {CSAT3} and
+  {Solent} sonic anemometers,1. {Path}-averaging errors.
+\newblock \emph{Boundary-Layer Meteorol\ape}, 119\penalty0 (2):\penalty0
+  375--395, 2006.
+\newblock ISSN 1573-1472.
+\newblock \doi{10.1007/s10546-005-9015-7}.
+\newblock URL \url{http://dx.doi.org/10.1007/s10546-005-9015-7}.
+
+\bibitem[Horst et~al.(2015)Horst, Semmer, and
+  Maclean]{horst.semmer.ea--correction}
+Horst, T.~W., Semmer, S.~R., and Maclean, G.
+\newblock Correction of a non-orthogonal, three-component sonic anemometer for
+  flow distortion by transducer shadowing.
+\newblock \emph{Boundary-Layer Meteorology}, 155\penalty0 (3):\penalty0
+  371--395, Feb 2015.
+\newblock ISSN 1573-1472.
+\newblock \doi{10.1007/s10546-015-0010-3}.
+\newblock URL \url{http://dx.doi.org/10.1007/s10546-015-0010-3}.
+\newblock corrections for sensor flow distortion.
+
+\bibitem[Zhou et~al.(2018)Zhou, Yang, Zhen, Li, Hao, Shen, Gao, Sun, and
+  Zheng]{zhou2018recovery}
+Zhou, X., Yang, Q., Zhen, X., Li, Y., Hao, G., Shen, H., Gao, T., Sun, Y., and
+  Zheng, N.
+\newblock Recovery of the three-dimensional wind and sonic temperature data
+  from a physically deformed sonic anemometer.
+\newblock \emph{Atmospheric Measurement Techniques}, 11\penalty0 (11):\penalty0
+  5981--6002, 2018.
+\newblock \doi{10.5194/amt-11-5981-2018}.
+\newblock URL \url{https://amt.copernicus.org/articles/11/5981/2018/}.
+
+\end{thebibliography}

@@ -1,0 +1,238 @@
+// =============================================================================
+// ==> ada: attached domain arrays vec (1D) and mat (2D)
+// =============================================================================
+record vecn {
+   param ran = 1;
+   var dom: domain(ran);                // the 1d domain                @\label{lin:vecn-dom}@
+   var arr: [dom] real;                 // the array                    @\label{lin:vecn-arr}@
+   // var vfirst = dom.first;              // the first index after reind
+   // var vlast = dom.last;                // the last index after reind
+   // var vdelta = 0;                      // the array shift
+   proc size: int {                     // the size of a vecn
+      return dom.size;
+   }
+   // proc ref reindex(
+   //    const in dv: range(int)
+   //    ) {
+   //    assert ( dv.size == dom.size );
+   //    vfirst = dv.first;
+   //    vlast = dv.last;
+   //    vdelta = vfirst - dom.first;
+   // }
+   inline proc ref this(in k: int...?n) ref {       // access arr[k]                @\label{lin:this-ark}@
+      return arr[k];
+   }
+   iter ref these(in rak:range(int)..?r) ref {
+      return arr[rak];
+   }
+   iter ref these() ref {               // iterate over the whole vecn             @\label{lin:these-vecn}@
+      for i in dom do {
+         yield arr[i];
+      }
+   }
+   // iter ref these(                      // iterate over a range         @\label{lin:these-range}@
+   //    in rak: range(int)...?r
+   //    ) ref {  
+   //    for k in zip(rak) do {
+   //       yield arr[k];
+   //    }
+   // }
+   // --------------------------------------------------------------------------
+   // a cast operator is needed for initialization and assignment from arrays
+   // --------------------------------------------------------------------------
+   operator :(a: [] real, type t: vecn) {
+      var v: vecn = a;
+      return v;
+   }
+   operator =(ref lhs: vecn, const in rhs: [] real) where rhs.rank == 1 {
+      lhs.dom = rhs.domain;
+      lhs.arr = rhs;
+   }
+// -------------------------------------------------------------------
+// operator overloading: *all* of the subsequent operators return
+// vecn. if you want to assign an operation between an array b and a
+// vecn c to an array a, just say: a = b + c.arr
+//
+// the domain of the vecn returned is always the same as the domain of
+// the lhs, except when the lhs is a scalar
+// -------------------------------------------------------------------
+   operator +=(ref rhs: vecn) {    // this + vecn                                  
+      this.arr += rhs.arr;
+   }
+   operator -=(rhs: vecn) {    // this - vecn
+      this.arr -= rhs.arr ;
+   }
+   operator +(lhs: real, rhs: vecn): vecn {    // real + vecn              @\label{lin:sum-real-vecn}@
+      var r = new vecn(rhs.dom);
+      r.arr = lhs + rhs.arr;
+      return r;
+   }
+   operator +(lhs: vecn, rhs: real): vecn {    // vecn + real              @\label{lin:sum-vecn-real}@
+      var r = new vecn(lhs.dom);
+      r.arr = lhs.arr + rhs;
+      return r;
+   }
+   // operator +(lhs: [] real, rhs: vecn): vecn
+   //    where lhs.rank == 1 {                  // [] real + vecn           @\label{lin:sum-array-vecn}@
+   //    const n = lhs.size;
+   //    assert (n == rhs.size);
+   //    var r = new vecn(lhs.domain);
+   //    r.arr = lhs + rhs.arr;
+   //    return r;
+   // }
+   // operator +(lhs: vecn, rhs: [] real): vecn
+   //    where rhs.rank == 1 {                  // vecn + [] real           @\label{lin:sum-vecn-array}@
+   //    const n = lhs.size;
+   //    assert (n == rhs.size);
+   //    var r = new vecn(lhs.dom);
+   //    r.arr = lhs.arr + rhs;
+   //    return r;
+   // }
+   operator +(lhs: vecn, rhs: vecn): vecn {     // vecn + vecn               @\label{lin:sum-vecn-vecn}@
+      const n = lhs.size;
+      assert (n == rhs.size);
+      var r = new vecn(lhs.dom);
+      r.arr = lhs.arr + rhs.arr ;
+      return r;
+   }
+   operator -(lhs: real, rhs: vecn): vecn {    // real - vecn              @\label{lin:sub-real-vecn}@
+      var r = new vecn(rhs.dom);
+      r.arr = lhs - rhs.arr ;
+      return r;
+   }
+   operator -(lhs: vecn, rhs: real): vecn {    // vecn - real              @\label{lin:sub-vecn-real}@
+      var r = new vecn(lhs.dom);
+      r.arr = lhs.arr - rhs;
+      return r;
+   }
+   // operator -(lhs: [] real, rhs: vecn): vecn
+   //    where lhs.rank == 1 {                  // [] real - vecn           @\label{lin:sub-array-vecn}@
+   //    const n = lhs.size;
+   //    assert (n == rhs.size);
+   //    var r = new vecn(lhs.domain);
+   //    r.arr = lhs - rhs.arr ;
+   //    return r;
+   // }
+   // operator -(lhs: vecn, rhs: [] real): vecn
+   //    where rhs.rank == 1 {                  // vecn - [] real           @\label{lin:sub-vecn-array}@
+   //    const n = lhs.size;
+   //    assert (n == rhs.size);
+   //    var r = new vecn(lhs.dom);
+   //    r.arr = lhs.arr - rhs;
+   //    return r;
+   // }
+   operator -(lhs: vecn, rhs: vecn): vecn {     // vecn - vecn               @\label{lin:sub-vecn-vecn}@
+      const n = lhs.size;
+      assert (n == rhs.size);
+      var r = new vecn(lhs.dom);
+      r.arr = lhs.arr - rhs.arr;
+      return r;
+   }
+   operator *(lhs: real, rhs: vecn): vecn {    // real * vecn              @\label{lin:mul-real-vecn}@
+      var r = new vecn(rhs.dom);
+      r.arr = lhs*rhs.arr;
+      return r;
+   }
+   operator *(lhs: vecn, rhs: real): vecn {    // vecn * real              @\label{lin:mul-vecn-real}@
+      var r = new vecn(lhs.dom);
+      r.arr = vecn.arr*rhs;
+      return r;
+   }
+   // operator *(lhs: [] real, rhs: vecn): vecn
+   //    where lhs.rank == 1 {                  // [] real * vecn           @\label{lin:mul-array-vecn}@
+   //    const n = lhs.size;
+   //    assert (n == rhs.size);
+   //    var r = new vecn(lhs.domain);
+   //    r.arr = lhs*rhs.arr;
+   //    return r;
+   // }
+   // operator *(lhs: vecn, rhs: real): vecn
+   //    where rhs.rank == 1 {                  // vecn * [] real           @\label{lin:mul-vecn-array}@
+   //    const n = lhs.size;
+   //    assert (n == rhs.size);
+   //    var r = new vecn(lhs.dom);
+   //    r.arr = vecn.arr*rhs;
+   //    return r;
+   // }
+   operator *(lhs: vecn, rhs: vecn): vecn {     // vecn * vecn               @\label{lin:mul-vecn-vecn}@
+      assert (lhs.size == rhs.size);
+      var r = new vecn(lhs.dom);
+      r.arr = lhs.arr*rhs.arr;
+      return r;
+   }
+   operator /(lhs: real, rhs: vecn): vecn {    // real / vecn              @\label{lin:div-real-vecn}@
+      var r = new vecn(rhs.dom);
+      r.arr = lhs/rhs.arr;
+      return r;
+   }
+   operator /(lhs: vecn, rhs: real): vecn {    // vecn / real              @\label{lin:div-vecn-real}@
+      var r = new vecn(lhs.dom);
+      r.arr = lhs.arr/rhs;
+      return r;
+   }
+   // operator /(lhs: [] real, rhs: vecn): vecn
+   //    where lhs.rank == 1 {                  // [] real / vecn           @\label{lin:div-array-vecn}@
+   //    const n = lhs.size;
+   //    assert (n == rhs.size);
+   //    var r = new vecn(lhs.domain);
+   //    r.arr = lhs/rhs.arr;
+   //    return r;
+   // }
+   // operator /(lhs: vecn, rhs: [] real): vecn
+   //    where rhs.rank == 1 {                  // vecn / [] real           @\label{lin:div-vecn-array}@
+   //    const n = lhs.size;
+   //    assert (n == rhs.size);
+   //    var r = new vecn(lhs.dom);
+   //    r.arr = lhs.arr/rhs;
+   //    return r;
+   // }
+   operator /(lhs: vecn, rhs: vecn): vecn {     // vecn / vecn               @\label{lin:div-vecn-vecn}@
+      const n = lhs.size;
+      assert (n == rhs.size);
+      var r = new vecn(lhs.dom);
+      r.arr = lhs.arr/rhs.arr;
+      return r;
+   }
+   operator **(lhs: vecn, rhs: int): vecn {    // vecn**int                @\label{lin:exp-vecn-int}@
+      var r = new vecn(lhs.dom);
+      r.arr = lhs.arr**rhs;
+      return r;
+   }
+   operator **(lhs: real, rhs: vecn): vecn {   // real**vecn               @\label{lin:exp-real-vecn}@
+      var r = new vecn(rhs.dom);
+      r.arr = lhs**rhs.arr;
+      return r;
+   }
+   operator **(lhs: vecn, rhs: real): vecn {   // vecn**real               @\label{lin:exp-vecn-real}@
+      var r = new vecn(lhs.dom);
+      r.arr = lhs.arr**rhs;
+      return r;
+   }
+   operator **(lhs: [] real, rhs: vecn): vecn
+      where lhs.rank == 1 {                  // [] real**vecn            @\label{lin:exp-array-vecn}@
+      const n = lhs.size;
+      assert (n == rhs.size);
+      var r = new vecn(rhs.dom);
+      r.arr = lhs**rhs.arr;
+      return r;
+   }
+   // operator **(lhs: vecn, rhs: [] real): vecn
+   //    where rhs.rank == 1 {                  // vecn** [] real           @\label{lin:exp-vecn-array}@
+   //    const n = lhs.size;
+   //    assert (n == rhs.size);
+   //    var r = new vecn(lhs.dom);
+   //    r.arr = lhs.arr**rhs;
+   //    return r;
+   // }
+   operator **(lhs: vecn, rhs: vecn): vecn {    // exponentiation          @\label{lin:exp-vecn-vecn}@
+      const n = lhs.size;
+      assert (n == rhs.size);
+      var r = new vecn(lhs.dom);
+      r.arr = lhs.arr**rhs.arr;
+      return r;
+   }            
+   // proc compare(i,j) {
+   //    return arr[i] - arr[j] ;
+   // }
+}
+

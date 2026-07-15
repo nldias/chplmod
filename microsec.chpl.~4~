@@ -1,0 +1,32 @@
+config const describe = false;
+const doc = "\
+=================================================================================\
+==> microsec: add a decent count of microseconds to strptime dumb sec limitation \
+=================================================================================\
+";
+if describe then {
+   writeln(doc);
+   exit(0);
+}
+// -----------------------------------------------------------------------------
+// Nelson Luís Dias
+// 2024-05-04T14:33:34
+// -----------------------------------------------------------------------------
+use nstrings only ifind;
+// -----------------------------------------------------------------------------
+// --> convert microseconds to an int! stime can be any string containing a
+// decimal separator "."; the microseconds will be counted as the string after
+// the ".". If "." is not present, returns 0.
+// -----------------------------------------------------------------------------
+inline proc microsec(stime: string): int {
+   var zdec = stime.ifind(".");
+   if zdec < 0 then {
+      return 0;
+   }
+   var idec = zdec + 1;
+   var smicro = stime[idec..];
+   var l0 = smicro.size;
+   var lmiss = 6 - l0;
+   var sret = smicro + lmiss*"0";
+   return sret: int;
+}

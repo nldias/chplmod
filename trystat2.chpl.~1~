@@ -1,0 +1,6 @@
+use Random;
+var A: [1..10000] real;
+fillRandom(A);
+use nstat only stat2;
+var (xm,xv) = stat2(A);
+writeln(" ", xm, "  ", xv);

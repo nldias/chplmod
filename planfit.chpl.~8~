@@ -1,0 +1,145 @@
+// =============================================================================
+// ==> planfit: Implements the planar fit method.
+//
+// See Wilczak, J. M.; Oncley, S. P. & Stage, S. A. Sonic anemometer tilt
+// correction algorithms #blm#, 2001, 99, 127-150.
+//
+// 2025-04-01T10:51:01 planrot now returns the angle between ubar and vbar.
+// 2025-04-01T10:59:13 planfit now returns the pitch angle alpha and the roll
+//    angle beta.
+// =============================================================================
+use smatrix only dot_mv, dot_mm, gauss;
+use Math only atan2, sin, cos;
+type array2 = [1..2] real;
+type array3 = [1..3] real;
+type matr22 = [1..2,1..2] real;
+type matr33 = [1..3,1..3] real;
+// -----------------------------------------------------------------------------
+// --> planfit: from an array Um0 of mean u,v and w velocities over
+// micrometeorological blocks, calculates the "horizontal" rotation matrix P and
+// the vertical offset woff. See reference above.
+// -----------------------------------------------------------------------------
+proc planfit(
+  ref Um0: [] array3,   // an array of 3-arrays     (mean wind velocity vectors)
+  ref P: matr33,        // the 2D rotation matrix
+  out alpha,            // pitch angle
+  out beta,             // roll angle
+  out woff: real        // the estimated vertical offset
+) where (Um0.rank == 1 ) {
+  var n = Um0.size;
+  var Y: array3 = 0.0;
+  var Z: matr33 = 0.0;
+  var b: array3;
+  // -----------------------------------------------------------------------------
+  // mount Eqn (48) of Wilczak et al, which in matrix form is Zb = Y
+  // -----------------------------------------------------------------------------   
+  Z[1,1] = n;
+  for i in 1..n do {
+    Z[1,2] += Um0[i][1];
+    Z[1,3] += Um0[i][2];
+    Z[2,2] += Um0[i][1]**2;
+    Z[2,3] += Um0[i][1]*Um0[i][2];
+    Z[3,3] += Um0[i][2]**2;
+    Y[1] += Um0[i][3];
+    Y[2] += Um0[i][1]*Um0[i][3];
+    Y[3] += Um0[i][2]*Um0[i][3];
+  }
+  // -----------------------------------------------------------------------------   
+  // Z is symmetric
+  // -----------------------------------------------------------------------------
+  Z[2,1] = Z[1,2];
+  Z[3,1] = Z[1,3];
+  Z[3,2] = Z[2,3];
+  // -----------------------------------------------------------------------------
+  // the heart of the matter are the bs. in the paper they are called b0, b1 and
+  // b2, but here for consistency I call them b1, b2 and b3. solve
+  // Z b = Y for b
+  // -----------------------------------------------------------------------------
+  gauss(Z,Y,b);
+  var den1 = sqrt(b[2]**2 + b[3]**2 + 1);
+  var p31  = -b[2] / den1;
+  var p32  = -b[3] / den1; 
+  var p33  = 1.0  / den1;
+  // -----------------------------------------------------------------------------
+  // trigonometric quantities
+  // -----------------------------------------------------------------------------
+  var den2 = sqrt(p32**2 + p33**2);  // appears thrice below
+  var sb   = -p32/den2;              // sin(beta)
+  var cb   =  p33/den2;              // cos(beta)
+  var sa   =  p31;                   // sin(alfa)
+  var ca   =  den2;                  // cos(alfa)
+  // -----------------------------------------------------------------------------
+  // retrieve alpha and beta
+  // -----------------------------------------------------------------------------
+  alpha = atan2(sa,ca);
+  beta = atan2(sb,cb);
+  // -----------------------------------------------------------------------------
+  // on to matrices D1 and C1
+  // -----------------------------------------------------------------------------
+  var C1: matr33;
+  C1[1,1..3] = [1.0, 0.0, 0.0];
+  C1[2,1..3] = [0.0,  cb,  sb];
+  C1[3,1..3] = [0.0, -sb,  cb];
+  var D1: matr33;
+  D1[1,1..3] = [ca,  0.0, -sa];
+  D1[2,1..3] = [0.0, 1.0, 0.0];
+  D1[3,1..3] = [sa,  0.0,  ca];
+  // -----------------------------------------------------------------------------
+  // P = D1.C1
+  // -----------------------------------------------------------------------------   
+  dot_mm(D1,C1,P);
+  // -----------------------------------------------------------------------------
+  // the vertical offset
+  // -----------------------------------------------------------------------------
+  woff = b[1];
+  return ;
+}
+// -----------------------------------------------------------------------------
+// --> planrot: rotation of a single block of high-frequency data
+// -----------------------------------------------------------------------------
+proc planrot(in woff: [] real,
+             ref P: matr33,
+             ref auu: [] real,
+             ref avv: [] real,
+             ref aww: [] real) {
+   compilerError("planrot may not be used for promotion");
+}
+
+proc planrot(in woff: real,
+             ref P: matr33,
+             ref auu: [] real,
+             ref avv: [] real,
+             ref aww: [] real):real //
+where ((auu.rank == 1 && avv.rank == 1 && aww.rank == 1)) {
+  //      &&  (auu.size == avv.size) &&  (auu.size == aww.size)) {
+  assert (avv.size == auu.size);
+  assert (aww.size == auu.size);
+  const n = auu.size;
+  ref uu = auu.reindex({1..n});
+  ref vv = avv.reindex({1..n});
+  ref ww = aww.reindex({1..n});
+  var uvet0, uvet: array3;
+  for i in 1..n do {
+    uvet0 = [uu[i],vv[i],ww[i]];
+    dot_mv(P,uvet0,uvet);
+    uu[i] = uvet[1];
+    vv[i] = uvet[2];
+    ww[i] = uvet[3] - woff; //
+  }
+  // -----------------------------------------------------------------------------
+  // now we rotate to make vbar = 0
+  // -----------------------------------------------------------------------------
+  var ubar = stat1(uu);
+  var vbar = stat1(vv);
+  var gamma = atan2(vbar,ubar);
+  var M: matr22;
+  M[1,1..2] = [cos(gamma),sin(gamma)];
+  M[2,1..2] = [-sin(gamma),cos(gamma)];
+  for i in 1..n do {
+    uvet0[1..2] = [uu[i],vv[i]];
+    dot_mv(M,uvet0[1..2],uvet[1..2]);
+    uu[i] = uvet[1];
+    vv[i] = uvet[2];
+  }
+  return gamma;
+}

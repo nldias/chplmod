@@ -1,0 +1,211 @@
+// ===================================================================
+// ==> current version of spectrum is a single procedure cross_density
+// that calculates the cross spectrum between two time series x and y
+// ===================================================================
+// -------------------------------------------------------------------
+// --> cross_density: calculates a cross-spectrum according to Bendat
+// and Piersol (1986), Random Data -- Analysis and Measurement
+// Procedures, 2nd Ed. John Wiley-Interscience, chapters 5 and
+// 11.
+//
+// *Without Alias Reducing (ra)*, but a provision is there
+//     
+// input must be in the form of a complex array z[] whose members are
+//
+// z[k] = x[k] + i y[k]
+//
+// where x and y are the original blocks of real data from the two
+// distinct time series under analysis.  This corresponds to step 3 in
+// section 11.6.3 of Bendat & Piersol, and must be done OUTSIDE this
+// function.
+//
+// 2011-03-14T16:17:10 NOTE that G has (n/2) and that the density at
+//                     zero freq is no longer returned!!!!
+//
+// ALSO NOTE that no tapering is being done here
+//
+// AS A BONUS, this function returns the calculated spectra of the
+// time series x and y in gxx and gyy.
+// -------------------------------------------------------------------
+use FFTW;
+use Math only pi;
+proc cross_density(
+   const in deltat: real,     // sampling acquisition interval (sec)
+   ref az: [] complex,         // z[k] = x[k] + i y[k]
+   ref aGxx:  [] real,        // x 1-sided spectrum
+   ref aGyy:  [] real,        // y 1-sided spectrum
+   ref aCoxy: [] real,        // cospectrum
+   ref aQuxy: [] real         // quadrature spectrum
+   ) {
+   assert(az.rank == 1);       // make sure all are 1D arrays
+   assert(aCoxy.rank == 1);
+   assert(aQuxy.rank == 1);
+   assert(aGxx.rank == 1);
+   assert(aGyy.rank == 1);
+   const n = az.size;
+   const m = n/2;
+   // writeln(n);
+   // writeln(m);
+   // exit(1);
+   ref z = az.reindex(0..#n); // reindex incoming array just in case
+   assert(aCoxy.size == m+1); // make sure returning arrays ...
+   assert(aQuxy.size == m+1); // ... have the correct size
+   assert(aGxx.size == m+1);
+   assert(aGyy.size == m+1);
+   ref Coxy = aCoxy.reindex(0..m);      // and reindex them
+   ref Quxy = aQuxy.reindex(0..m);
+   ref Gxx = aGxx.reindex(0..m);
+   ref Gyy = aGyy.reindex(0..m);
+   const den = n:real;        // start real business
+   const minusI = -1i;        // 1/i == -i                                             
+// -------------------------------------------------------------------
+// allocates memory for x and y
+// -------------------------------------------------------------------
+   var x: [0..m] complex = 0.0 + 0.0i; 
+   var y: [0..m] complex = 0.0 + 0.0i;
+// -------------------------------------------------------------------
+// step 4: compute the FFT of z inplace
+// -------------------------------------------------------------------
+//   autoInitFFTW_MT = true;    // parallel FFTs?
+   var plan: fftw_plan;
+   plan = plan_dft(z, sign = FFTW_FORWARD, flags = FFTW_ESTIMATE);
+   execute(plan);
+// -------------------------------------------------------------------
+// step 5: with FFT of z, obtain FFT's of original time series via eqn
+// 11.72 of Bendat & Piersol
+//
+// note however that k cannot be == 0, and that there is a typo in the
+// eq. for x, which should read the conjugate of z at n MINUS k !
+// -------------------------------------------------------------------
+   x[0] = z[0].re;
+   y[0] = z[0].im;
+   forall k in 1..m do {
+      var zk = z[k];
+      var zl = conj(z[n-k]);
+      x[k] = 0.5*(zk + zl);
+      y[k] = 0.5*minusI*(zk - zl);
+   }
+// -------------------------------------------------------------------
+// step 7: one-sided spectra and cross-spectrum
+// -------------------------------------------------------------------
+   forall k in 0..m do {
+// -------------------------------------------------------------------
+// reduce alias: the cross-spectrum receives the same treatment as the
+// spectrum
+//
+// see: paper by Gobbi, Chamecki and Dias, in WRR
+// see: deltaf05
+// see: deltaf06
+//
+// 20040702: alias reduction is done here, to take advantage of the
+// k-loop
+//
+// 2016-09-27T16:13:34 no more anti-aliasing, for now...
+// -------------------------------------------------------------------
+//      ra = (1.0 + cos(k*pi/n))/2.0     // anti-aliasing term
+//      ra = 1.0;
+      var xx = x[k]; // x[k]*ra;
+      var xc = conj(xx);
+      var yy = y[k]; // y[k]*ra;
+      var gg = xc*yy;
+      gg = gg*deltat*2.0/den;
+// -------------------------------------------------------------------
+// Now calculates the 4 output arrays
+// -------------------------------------------------------------------
+      Coxy[k] = gg.re;
+// -------------------------------------------------------------------
+// 20040707: this minus sign for Qu complies with Bendat and Piersol's
+// convention
+// -------------------------------------------------------------------
+      Quxy[k] = -gg.im;
+      Gxx[k] = 2.0*deltat*abs(xx)**2/den;
+      Gyy[k] = 2.0*deltat*abs(yy)**2/den;
+   }
+}
+proc cross_density_ra(
+   const in deltat: real,     // sampling acquisition interval (sec)
+   ref az: [] complex,        // z[k] = x[k] + i y[k]
+   ref aGxx:  [] real,        // x 1-sided spectrum
+   ref aGyy:  [] real,        // y 1-sided spectrum
+   ref aCoxy: [] real,        // cospectrum
+   ref aQuxy: [] real         // quadrature spectrum
+   ) {
+   assert(az.rank == 1);       // make sure all are 1D arrays
+   assert(aCoxy.rank == 1);
+   assert(aQuxy.rank == 1);
+   assert(aGxx.rank == 1);
+   assert(aGyy.rank == 1);
+   const n = az.size;
+   const m = n/2;
+   ref z = az.reindex(0..#n); // reindex incoming array just in case
+   assert(aCoxy.size == m+1); // make sure returning arrays ...
+   assert(aQuxy.size == m+1); // ... have the correct size
+   assert(aGxx.size == m+1);
+   assert(aGyy.size == m+1);
+   ref Coxy = aCoxy.reindex(0..m);      // and reindex them
+   ref Quxy = aQuxy.reindex(0..m);
+   ref Gxx = aGxx.reindex(0..m);
+   ref Gyy = aGyy.reindex(0..m);
+   const den = n:real;        // start real business
+   const minusI = -1i;        // 1/i == -i                                             
+// -------------------------------------------------------------------
+// allocates memory for x and y
+// -------------------------------------------------------------------
+   var x: [0..m] complex = 0.0 + 0.0i; 
+   var y: [0..m] complex = 0.0 + 0.0i;
+// -------------------------------------------------------------------
+// step 4: compute the FFT of z inplace
+// -------------------------------------------------------------------
+//   autoInitFFTW_MT = true;    // parallel FFTs?
+   var plan: fftw_plan;
+   plan = plan_dft(z, sign = FFTW_FORWARD, flags = FFTW_ESTIMATE);
+   execute(plan);
+// -------------------------------------------------------------------
+// step 5: with FFT of z, obtain FFT's of original time series via eqn
+// 11.72 of Bendat & Piersol
+//
+// note however that k cannot be == 0, and that there is a typo in the
+// eq.  for x, which should read the conjugate of z at n MINUS k !
+// -------------------------------------------------------------------
+   x[0] = z[0].re;
+   y[0] = z[0].im;
+   forall k in 1..m do {
+      var zk = z[k];
+      var zl = conjg(z[n-k]);
+      x[k] = 0.5*(zk + zl);
+      y[k] = 0.5*minusI*(zk - zl);
+   }
+// -------------------------------------------------------------------
+// step 7: one-sided spectra and cross-spectrum
+// -------------------------------------------------------------------
+   forall k in 0..m do {
+// -----------------------------------------------------------------------------
+// reduce alias: the cross-spectrum receives the same treatment as the
+// spectrum
+//
+// see: paper by Gobbi, Chamecki and Dias, in WRR
+// see: deltaf05
+// see: deltaf06
+//
+// 2023-02-01T10:34:01: alias reduction is done here, to take advantage of the
+// k-loop
+// -----------------------------------------------------------------------------
+      var ra = (1.0 + cos(k*pi/n))/2.0;     // anti-aliasing term
+      var xx = x[k]*ra;
+      var xc = conjg(xx);
+      var yy = y[k]*ra;
+      var gg = xc*yy;
+      gg = gg*deltat*2.0/den;
+// -------------------------------------------------------------------
+// Now calculates the 4 output arrays
+// -------------------------------------------------------------------
+      Coxy[k] = gg.re;
+// -------------------------------------------------------------------
+// 20040707: this minus sign for Qu complies with Bendat and Piersol's
+// convention
+// -------------------------------------------------------------------
+      Quxy[k] = -gg.im;
+      Gxx[k] = 2.0*deltat*abs(xx)**2/den;
+      Gyy[k] = 2.0*deltat*abs(yy)**2/den;
+   }
+}

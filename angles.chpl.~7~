@@ -1,0 +1,121 @@
+// =============================================================================
+// ==> angles is a set of small useful procedures to convert angles between
+//     radians and degrees.minutes.seconds.decimals
+//
+// Nelson Luís Dias, nelsonluisdias@gmail.com
+//
+// 2024-03-09T09:58:20 cleaning up and including header, comments
+// =============================================================================
+use Math only nearbyint, pi;
+use IO only stderr;
+// -----------------------------------------------------------------------------
+// --> togmsc: converts decimal degrees to degrees, minutes, seconds and
+//     hundredths of seconds
+//
+// input:  ggg.xxxxxx -- decimal degrees
+// output: ggg.mmsscc -- degrees (gg), minutes (mm), seconds (ss) & hundredths
+//                       (cc)
+// -----------------------------------------------------------------------------
+
+
+// #include <stdio.h>
+// #include <math.h>
+
+// void convertToDMS(double decimalDegrees, int *d, int *m, double *s) {
+//     // 1. Degrees are the integer part of the decimal degrees
+//     *d = (int)decimalDegrees;
+
+//     // 2. Take the absolute fractional part and multiply by 60 for minutes
+//     double fractionalPart = fabs(decimalDegrees - *d);
+//     double minutesFull = fractionalPart * 60.0;
+//     *m = (int)minutesFull;
+
+//     // 3. Take the remaining fractional part of minutes and multiply by 60 for seconds
+//     *s = (minutesFull - *m) * 60.0;
+// }
+
+// int main() {
+//     double dd = 45.5432;
+//     int d, m;
+//     double s;
+
+//     convertToDMS(dd, &d, &m, &s);
+
+//     printf("Decimal: %f\n", dd);
+//     printf("DMS: %d° %d' %.2f\"\n", d, m, s);
+
+//     return 0;
+// }
+
+
+proc togmsc(
+   in xdec: real
+   ): real {
+   var xint: real;
+   var xmsc, part: real;
+   xint = trunc(xdec); // modf(xdec,&xint) ;
+   xmsc = xint ;
+   stderr.writeln("xmsc = ",xmsc);
+   xdec = ( xdec - xint ) * 60.0 ;
+   xint = trunc(xdec); //   modf(xdec,&xint) ;
+   part = xint/100.0;
+   writeln("part = ",part);
+   if part == 0.60 then {
+      part = 1.0;
+   }
+   xmsc = xmsc + part; // xint / 100.0 ;
+   stderr.writeln("xmsc = ",xmsc);
+   xdec = (xdec - xint) * 60.0 ;
+   xint = trunc(xdec);
+   part = xdec/10000;
+   writeln("part = ",part);
+   if part == 0.0060 then {
+      part = 0.01;
+   }
+   xmsc = xmsc + part;
+   stderr.writeln("xdec = ",xdec);
+   stderr.writeln("xint = ",xint);
+   stderr.writeln("xmsc = ",xmsc);
+   return(xmsc)  ;
+}
+
+// -----------------------------------------------------------------------------
+// --> todec: converts degrees, minutes and seconds to decimals
+//
+// input:  ggg.mmss  degrees (gg), minutes (mm), seconds (ss) 
+// output: ggg.xxxx  decimal degrees
+// -----------------------------------------------------------------------------
+
+
+proc todec(
+   in xmsc: real
+   ): real {
+   var xint = trunc(xmsc);
+   var xdec = xint;
+   xmsc = (xmsc - xint)*100.0;
+   xint = nearbyint(xmsc);
+   xdec += xint/60.0;
+   xmsc = (xmsc - xint)*100;
+   xdec += xmsc/3600.0;
+   return(xdec) ;
+}
+// -----------------------------------------------------------------------------
+// --> rad2dec: convert from radians to decimal degrees
+// -----------------------------------------------------------------------------
+inline proc rad2dec(const in r: real(?w)): real(w) {
+   return r*180.0/pi;
+}
+// -----------------------------------------------------------------------------
+// --> dec2rad: convert from decimal degrees to radians
+// -----------------------------------------------------------------------------
+inline proc dec2rad(const in r: real(?w)): real(w) {
+   return r*pi/180.0;
+}
+// =============================================================================
+// examples
+// =============================================================================
+config const examples: bool ;
+if examples then {
+   writef("todec(121.3740) = %8.4dr\n",todec(121.3740));
+}
+

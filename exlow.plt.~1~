@@ -1,0 +1,19 @@
+load 'terminal.plt'
+set terminal epslatex standalone color font 'lmr' 12 size 10cm, 10cm
+set size square
+set output 'xy-tbetaq-unstable.tex'
+set notitle
+set xrange [0:0.3]
+set yrange [0:0.3]
+set format x "$%4.2f$"
+set format y "$%4.2f$"
+set label '(b)' at 0.05,0.255
+set grid
+set xlabel 'Observed $\overline{w^\prime{q}^\prime}\;(\mathrm{m\,s^{-1}\,g\,kg^{-1}})$'
+set ylabel 'Predicted $\overline{w^\prime{q}^\prime}\;(\mathrm{m\,s^{-1}\,g\,kg^{-1}})$'
+f(x) = a*x
+fit f(x) 'tbeta-wq-unstable.out' using 2:3 via a
+plot 'tbeta-wq-unstable.out' using 2:3 notitle with points pt 7 ps 1 lc rgb Orange,\
+     f(x) notitle with lines lt 1 lw 3 lc rgb Vermillion,\
+     x notitle with lines lt 1 lw 3 lc rgb 'black'
+

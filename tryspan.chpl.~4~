@@ -1,0 +1,18 @@
+use nchpl;
+
+
+for i in reverse(1..10 by 2) do {
+   writeln("i = ",i);
+}
+
+for j in span(10,1,-2) do {
+   writeln("j = ",j);
+}
+
+for k in span(1,10) do {
+   writeln("k = ",k);
+}
+
+for l in 1..10 by -2 do {
+   writeln("k = ",l);
+}

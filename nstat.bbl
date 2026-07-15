@@ -1,0 +1,50 @@
+\begin{thebibliography}{}
+
+\bibitem[Benjamin and Cornell, 1970]{benjamim.cornell:probability}
+Benjamin, J.~R. and Cornell, C.~A. (1970).
+\newblock {\em Probability, Statistics and Decision for Civil Engineers}.
+\newblock McGraw-Hill, New York.
+
+\bibitem[Fletcher, 1971]{fletcher1971modified}
+Fletcher, R. (1971).
+\newblock A modified {Marquardt} subroutine for non-linear least squares.
+\newblock Technical report, Theoretical Physics Division, Atomic Energy
+  Research Establishment Harwell, UK.
+
+\bibitem[Gavin, 2022]{gavin2022levenberg}
+Gavin, H.~P. (2022).
+\newblock The {Levenberg-Marquardt} algorithm for nonlinear least squares
+  curve-fitting problems.
+\newblock \available\
+  \url{https://people.duke.edu/~hpgavin/ExperimentalSystems/lm.pdf}.
+
+\bibitem[John and Draper, 1980]{john1980alternative}
+John, J. and Draper, N.~R. (1980).
+\newblock An alternative family of transformations.
+\newblock {\em Journal of the Royal Statistical Society: Series C (Applied
+  Statistics)}, 29(2):190--197.
+
+\bibitem[Kilpatrick et~al., 2015]{kilpatrick2015decade}
+Kilpatrick, K., Podest{\'a}, G., Walsh, S., Williams, E., Halliwell, V.,
+  Szczodrak, M., Brown, O., Minnett, P.~J., and Evans, R. (2015).
+\newblock A decade of sea surface temperature from modis.
+\newblock {\em Remote Sen\ape\ Environ\ape}, 165:27--41.
+
+\bibitem[Marquardt, 1963]{marquardt--algotithm}
+Marquardt, D.~W. (1963).
+\newblock An algorithm for least-squares estimation of nonlinear parameters.
+\newblock {\em Journal of the Society for Industrial and Applied Mathematics},
+  11(2):pp. 431--441.
+
+\bibitem[Merchant and Harris, 1999]{merchant1999toward}
+Merchant, C. and Harris, A. (1999).
+\newblock Toward the elimination of bias in satellite retrievals of sea surface
+  temperature: 2. comparison with in situ measurements.
+\newblock {\em Journal of Geophysical Research: Oceans}, 104(C10):23579--23590.
+
+\bibitem[Netter et~al., 1983]{netter1983applied-linear-regression-models}
+Netter, J., Wasserman, W., and Kutner, M.~H. (1983).
+\newblock {\em Applied linear regression models}.
+\newblock Richard D. Irwin, Inc., Homewood, Illinois.
+
+\end{thebibliography}

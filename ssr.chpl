@@ -1,0 +1,1104 @@
+// =============================================================================
+// ssr is a set of search and sort functions
+//
+// Nelson Luis Dias
+// 1990-01-01 (circa)
+// 2006-04-21 (today)
+// 2021-03-20T14:44:19 now this is today: Chapel!
+// 2021-08-28T13:47:27 amin: the minimum of an array
+// 2021-09-01T08:59:58 aminz: the minimum of an array not including zeros
+// 2022-04-21T20:23:07 quickselect & friends added
+// 2024-02-05T09:41:55 quicksort3 added
+// 2024-07-10T10:05:07 indxsort2 added, using built-in sort and a comparator
+// 2025-05-28T18:40:34 ksum (Kahan sum)
+// 2025-06-16T16:10:10 find_factors (translated from Python?)
+// 2026-05-14T08:41:29 creating indxamin!
+// =============================================================================
+use nstat only nanstat1;
+use Math only log2;
+// -----------------------------------------------------------------------------
+// --> amin: the minimum of an array
+// -----------------------------------------------------------------------------
+proc amin(const ref a: [] ?ta): ta where (isIntegralType(ta) || isRealType(ta)) {
+   var b = max(ta);
+   for x in a do {
+      if x < b then {
+         b = x;
+      }
+   }
+   return b;
+}
+// -----------------------------------------------------------------------------
+// --> indxamin: the index of the minimum of an array: a very nice
+// example of Chapel's generic capabilities!
+// -----------------------------------------------------------------------------
+proc indxamin(const ref a: [?da] ?ta): if da.rank == 1 then da.idxType else da.rank*da.idxType
+   where da.isRectangular() && (isIntegralType(ta) || isRealType(ta)) {
+   var aux: ta;
+   var amin = max(ta);
+   var min_indx: if da.rank == 1 then da.idxType else da.rank*da.idxType;
+   for indx in da do {
+      aux = a[indx];
+       if aux < amin then {
+         amin = aux;
+         min_indx = indx ;
+      }
+   }
+   return min_indx;
+}
+// -----------------------------------------------------------------------------
+// --> amax: the maximum of an array
+// -----------------------------------------------------------------------------
+proc amax(
+   const ref a: [] ?ta        // the arrray of type ta
+   ): ta                      // the maximum, same type
+   where (isIntegralType(ta) || isRealType(ta)) {
+   var b = min(ta);           // the minimum of the type
+   for x in a do {            // iterate over all of a
+      if x > b then {         // find maximum
+         b = x;
+      }
+   }
+   return b;
+}
+// -----------------------------------------------------------------------------
+// --> aminz: the minimum of an array not including zeros
+// -----------------------------------------------------------------------------
+proc aminz(
+   ref a: [] ?ta
+   ): ta where (a.rank == 1) && (ta == int || ta == real) {
+   const zero = 0.0:ta;              // convert to the base type zero
+   var b = max(ta);
+   for x in a do {
+      if x == zero then {
+         continue;
+      }
+      if x < b then {
+         b = x;
+      }
+   }
+   return b;
+}
+// -----------------------------------------------------------------------------
+// are all elements in the array aa the same?
+// -----------------------------------------------------------------------------
+proc allequal(const ref aa: [] ?ta): bool where aa.rank == 1 {
+   var n = aa.size;
+   ref a = aa.reindex(0..n-1);
+   var e = a[0];
+   for i in 1..n-1 do {
+      if a[i] != e then return false;
+   }
+   return true;
+}
+
+
+// -----------------------------------------------------------------------------
+// --> allequal: are all elements in the array aa the same? Slightly redundant
+// because it compares the first element with itself.
+// -----------------------------------------------------------------------------
+// proc allequal(const ref aa: [] ?ta): bool {
+//    var n = aa.size;
+//    ref a = reshape(aa,{0..n-1});
+//    var e = a[0];
+//    for i in 1..n-1 do  {
+//       if a[i] != e then return false;
+//    }
+//    return true;
+// }
+
+
+
+// -----------------------------------------------------------------------------
+// --> allequalto: are all elements in the array aa equal to b?
+// -----------------------------------------------------------------------------
+proc allequalto(const ref a: [] ?ta, const in b: ta): bool where a.rank == 1 {
+   for e in a do {
+      if e != b then return false;
+   }
+   return true;
+}
+
+// -----------------------------------------------------------------------------
+// --> is sorted: are all ements of array a sorted?
+// -----------------------------------------------------------------------------
+proc issorted(ref a: [?da] ?ta): bool  where (isIntegralType(ta) || isRealType(ta)) && (a.rank == 1) {
+   for i in da.low+1 .. da.high do {
+      if a[i] < a[i-1] then {
+         return false;
+      }
+   }
+   return true;
+}
+
+// -------------------------------------------------------------------
+// --> heapsort: sorts an array of floats, using the heap algorithm
+//
+// adapted from heapsort (hpsort) in Numerical Recipes
+// -------------------------------------------------------------------
+proc heapsort(
+   ref ax: [] ?ta
+   )
+   where (isIntegralType(ta) || isRealType(ta)) && (ax.rank == 1) {
+// -------------------------------------------------------------------
+// painful reindexing
+// -------------------------------------------------------------------
+   var n = ax.size;
+   ref x = ax.reindex(1..n);
+   var qq: ta;           // to be truly generic
+// -------------------------------------------------------------------
+// beginning of algorithm proper
+// -------------------------------------------------------------------
+   var l = n/2 + 1 ;
+   var ir = n ;
+   while true do {
+      if (l > 1) then {
+         l = l-1;
+         qq = x[l];
+      }
+      else {
+         qq = x[ir];
+         x[ir] = x[1];
+         ir -= 1;
+         if ir == 1 then {
+            x[1] = qq;
+            break ;
+         }
+      }
+      var i = l;
+      var j = l+l;
+      while j <= ir do {
+         if j < ir && x[j] < x[j+1] then {
+            j += 1;
+         }
+         if (qq < x[j]) then {
+            x[i] = x[j];
+            i = j;
+            j = j+j;
+         }
+         else {
+            j=ir+1;
+         }
+      }
+      x[i] = qq;
+   }
+   return;
+}
+// -------------------------------------------------------------------
+// --> indxsort: sorts an array of floats, using the heap algorithm,
+// and sorting by index, stored in indx
+//
+// adapted from heapsort (hpsort) in Numerical Recipes
+// -------------------------------------------------------------------
+proc indxsort(
+   const ref ax: [] ?ta,
+   ref aindx: [] int
+   ) where (isNumericType(ta) && (ax.rank == 1) && (aindx.rank == 1)) {
+   // -------------------------------------------------------------------
+   // painful reindexing
+   // -------------------------------------------------------------------
+   var n = ax.size;
+   ref x = ax.reindex(1..n);
+   ref indx = aindx.reindex(1..n);
+   var qq: ta;           // to be truly generic
+   // -------------------------------------------------------------------
+   // index is started from 1 to n
+   // -------------------------------------------------------------------
+   for j in 1..n do {
+      indx[j] = j;
+   }
+   // -------------------------------------------------------------------
+   // beginning of algorithm proper
+   // -------------------------------------------------------------------
+   var indxt: int;
+   var l = n/2 + 1 ;
+   var ir = n ;
+   while true do {
+      if (l > 1) then {
+         l -= 1;
+         indxt = indx[l];
+         qq = x[indxt];
+      }
+      else {
+         indxt=indx[ir];
+         qq = x[indxt];
+         indx[ir] = indx[1];
+         ir -= 1;
+         if ir == 1 then {
+            indx[1] = indxt ;
+            break ;
+         }
+      }
+      var i = l;
+      var j = l+l;
+      while j <= ir do {
+         if ((j < ir) && (x[indx[j]] < x[indx[j+1]])) then {
+            j += 1;
+         }
+         if (qq < x[indx[j]]) then {
+            indx[i] = indx[j];
+            i = j;
+            j = j+j;
+         }
+         else {
+            j=ir+1;
+         }
+      }
+      indx[i] = indxt;
+   }
+   // -------------------------------------------------------------------
+   // we still need to fix the indices
+   // -------------------------------------------------------------------
+   const del = ax.indices.first - 1;
+   indx += del;
+   return;
+}
+
+// -----------------------------------------------------------------------------
+// --> indxsort2: same as indxsort, but using chapel's built-in sort
+// -----------------------------------------------------------------------------
+use Sort only sort;
+proc indxsort2(
+   const ref A: [?D] ?tA,
+   ref I: [D] int
+   ) where (isIntegralType(tA) || isRealType(tA)) && (A.rank == 1)  {
+   I = [i in D] i;                      // this is safer
+   proc (A.type).compare(i,j) {
+      return this[i] - this[j];
+   }
+   sort(I, comparator=A);
+}
+// -----------------------------------------------------------------------------
+// --> quicksort3: 3-way quicksort, from
+//
+// https://algs4.cs.princeton.edu/home/
+//
+// and
+//   @book{sedgewick2011algorithms,
+//   title={Algorithms},
+//   author={Sedgewick, Robert and Wayne, Kevin},
+//   publisher={Addison-Wesley},
+//   edition={4th},
+//   year={2011}
+// }
+//
+// Note: some references in the internet use "var i = low". Both work, but
+// setting "var i = low+1" in this case saves one sweep and two comparisons
+// inside the while loop.
+// -----------------------------------------------------------------------------
+proc quicksort3(
+   ref a: [] ?ta,
+   const in low: int,
+   const in high: int
+   ) where (a.rank == 1) {
+   if ( low >= high) then return ;
+   var lt = low;                   // less than sub-section
+   var gt = high;                  // greater than sub-section
+   var v = a[low];                 // comparison element
+   var i = low+1;                  // should it be i = low???? 
+   while ( i <= gt ) do {
+      if ( a[i] < v ) then {
+         a[i] <=> a[lt];
+         lt += 1;
+         i += 1;
+      }
+      else if ( a[i] > v ) then {
+         a[i] <=> a[gt] ;
+         gt -= 1;
+      }
+      else {
+         i += 1;
+      }      
+   }
+   quicksort3(a,low,lt-1);
+   quicksort3(a,gt+1,high);
+   return;
+}
+
+
+
+// -----------------------------------------------------------------------------
+// --> squick3: strictly serial 3-way quicksort, from
+//
+// https://algs4.cs.princeton.edu/home/
+//
+// and
+//   @book{sedgewick2011algorithms,
+//   title={Algorithms},
+//   author={Sedgewick, Robert and Wayne, Kevin},
+//   publisher={Addison-Wesley},
+//   edition={4th},
+//   year={2011}
+// }
+//
+// Note: some references in the internet use "var i = low". Both work, but
+// setting "var i = low+1" in this case saves one sweep and two comparisons
+// inside the while loop.
+//
+// This is a faster version of Sedgwick & Wayne:
+// quicksort.f -*-f90-*-
+// Author: t-nissie
+// License: GPLv3
+// Gist: https://gist.github.com/t-nissie/479f0f16966925fa29ea
+// -----------------------------------------------------------------------------
+proc squick3(
+   ref a: [] ?ta,
+   const in low: int,
+   const in high: int
+   ) where (a.rank == 1) {
+   if ( low >= high) then return ;
+   var x = a[ (low+high)/2];
+   var i = low;
+   var j = high;
+   while(true) do {
+      while a[i] < x do i += 1;
+      while x < a[j] do j -= 1;
+      if i >= j then break ;
+      a[i] <=> a[j] ;
+      i += 1;
+      j -= 1;
+   }
+   if low < i-1 then squick3(a,low,i-1);
+   if j+1 < high then squick3(a,j+1,high);
+   return;
+}
+// proc squick3(
+//    ref a: [] ?ta,
+//    const in low: int,
+//    const in high: int
+//    ) where (a.rank == 1) {
+//    if ( low >= high) then return ;
+//    serial {
+//       var lt = low;                   // less than sub-section
+//       var gt = high;                  // greater than sub-section
+//       var v = a[low];                 // comparison element
+//       var i = low+1;                  // should it be i = low???? 
+//       while ( i <= gt ) do {
+//          if ( a[i] < v ) then {
+//             a[i] <=> a[lt];
+//             lt += 1;
+//             i += 1;
+//          }
+//          else if ( a[i] > v ) then {
+//             a[i] <=> a[gt] ;
+//             gt -= 1;
+//          }
+//          else {
+//             i += 1;
+//          }      
+//       }
+//       squick3(a,low,lt-1);
+//       squick3(a,gt+1,high);
+//       return;
+//    }
+// }
+
+
+// -----------------------------------------------------------------------------
+// --> pquick3: (locale-parallel) 3-way quicksort, from
+//
+// https://algs4.cs.princeton.edu/home/
+//
+// and
+//   @book{sedgewick2011algorithms,
+//   title={Algorithms},
+//   author={Sedgewick, Robert and Wayne, Kevin},
+//   publisher={Addison-Wesley},
+//   edition={4th},
+//   year={2011}
+// }
+//
+// Note: some references in the internet use "var i = low". Both work, but
+// setting "var i = low+1" in this case saves one sweep and two comparisons
+// inside the while loop.
+// -----------------------------------------------------------------------------
+proc pquick3(
+   ref a: [] ?ta,
+   const in low: int,
+   const in high: int,
+   in depth: int,
+   const in maxdepth: int   
+   ) where (a.rank == 1) {
+   if ( low >= high) then return ;
+   var lt = low;                   // less than sub-section
+   var gt = high;                  // greater than sub-section
+   var v = a[low];                 // comparison element
+   var i = low+1;                  // should it be i = low???? 
+   while ( i <= gt ) do {
+      if ( a[i] < v ) then {
+         a[i] <=> a[lt];
+         lt += 1;
+         i += 1;
+      }
+      else if ( a[i] > v ) then {
+         a[i] <=> a[gt] ;
+         gt -= 1;
+      }
+      else {
+         i += 1;
+      }      
+   }
+   // -----------------------------------------------------------------------------
+   // what is the depth?
+   // -----------------------------------------------------------------------------
+   depth += 1;
+   // -----------------------------------------------------------------------------
+   // run in *exactly* npu cores, but how????
+   // -----------------------------------------------------------------------------
+   if depth <= maxdepth then {
+   //      writeln("depth = ",depth);
+      cobegin {
+         pquick3(a,low,lt-1,depth,maxdepth);
+         pquick3(a,gt+1,high,depth,maxdepth);
+      }
+   }
+   else {
+      squick3(a,low,lt-1);
+      squick3(a,gt+1,high);
+   }
+   return;
+}
+
+// -----------------------------------------------------------------------------
+// --> quickstart should be used to initialize pquick: finds the number of
+// available cores and starts parallelizing
+// -----------------------------------------------------------------------------
+proc quickstart(
+   ref a: [] ?ta,
+   const in low: int,
+   const in high: int
+   ) where (a.rank == 1) {
+   const npu = here.numPUs(logical=true);
+   const maxdepth = log2(npu):int;
+// -----------------------------------------------------------------------------
+// now start parallel quick!
+// -----------------------------------------------------------------------------
+   pquick3(a,low,high,1,maxdepth);
+}
+// -------------------------------------------------------------------
+// --> countval: count how many times val occurs in x
+// -------------------------------------------------------------------
+proc countval(val: ?tv, x: [] ?tx): int {
+   // --------------------------------------------------------------------
+   // be careful with empty arrays
+   // --------------------------------------------------------------------
+   assert(x.rank == 1);
+   assert(tx == tv);
+   var n = x.size;
+   if n == 0 then {
+      halt("ssr-->countval: empty array");
+   }
+   var count = 0;
+   // -------------------------------------------------------------------
+   // be careful with NANs
+   // -------------------------------------------------------------------
+   if tv == real && isnan(val) then {
+      for e in x do {
+         if isnan(e) then count += 1;
+      }
+   }
+   else {
+      for e in x do {
+         if e == val then count +=1 ;
+      }
+   }
+   return count;
+}
+// -------------------------------------------------------------------
+// --> purgeval: purge all occurrences of val inside the array
+// -------------------------------------------------------------------
+proc purgeval(
+   val: ?tv,                  // the value to be purged
+   ax: [] ?tx                 // the array from which to purge
+): [] tx 
+where ax.rank == 1 {
+// --------------------------------------------------------------------
+// be careful with empty arrays
+// --------------------------------------------------------------------
+   assert(tx == tv);
+   var n = ax.size;
+   if n == 0 then {
+      halt("ssr-->purgeval: empty array");
+   }
+   var count = countval(val, ax);
+   ref x = ax.reindex(0..n-1);
+   var y: [0..n-1-count] tx;       // will return this array
+// -------------------------------------------------------------------
+// be careful with NANs
+// -------------------------------------------------------------------
+   if tv == real && isnan(val) then {
+      var k = 0;
+      for i in 0..#n do {
+         if !isnan(x[i]) then {
+            y[k] = x[i];
+            k += 1;
+        }
+      }
+   }
+   else {
+      var k = 0;
+      for i in 0..#n do {
+         if x[i] != val then {
+            y[k] = x[i];
+            k += 1;
+         }
+      }
+   }
+   return y;
+}
+
+// -------------------------------------------------------------------
+// --> asum: sum all elements in array x
+// -------------------------------------------------------------------
+inline proc asum(x: [] ?tx): tx where isNumeric(tx) {
+   var sum: tx = 0;
+   for a in x do {
+      sum += a;
+   }
+   return sum;
+}
+
+// -------------------------------------------------------------------
+// --> ksum (Kahan Sum): sum without loss of precision
+// -------------------------------------------------------------------
+proc ksum(
+   const in ax: [] real
+   ): real where ax.rank == 1 {
+   var sum = 0.0;
+   var c = 0.0;                    // Compensate for round-off errors
+   var n = ax.size;
+   ref x = ax.reindex(1..n);
+   for i in 1..n do {
+      var y = x[i] - c;
+      var t = sum + y;
+      if (t - sum == y) {          // Check for overflow
+         c = (t - sum) - y;        // Update compensation
+      } else {
+         c = (t - sum) - y;        // Update compensation
+         sum = t;
+      }
+   }
+   return sum;
+}
+// -------------------------------------------------------------------
+// --> butsum: sum all elements but those which are equal to val in
+// array x. Returns the number of elements found that are different
+// from val, and the overall sum.
+// -------------------------------------------------------------------
+proc butsum(val: ?tv, x: [] ?tx): (int, tv) {
+   //   assert (x.rank == 1);
+   assert (tx == tv);
+   var n = x.size;
+   if n == 0 then {
+      halt("ssr-->countval: empty array");
+   }
+   var nb = 0;
+   var sum: tv = 0;
+   if tv == real && isnan(val) then {
+      for e in x do {
+         if !isnan(e) then sum += e;
+         nb += 1;
+      }
+   }
+   else {
+      for e in x do {
+         if e != val then sum += e;
+         nb += 1;
+      }
+   }
+   return (nb,sum);
+}
+// -------------------------------------------------------------------
+// --> whereval: where val occurs in x
+//
+// important: whereval *always* returns a 0-based array
+// -------------------------------------------------------------------
+use dgrow;
+proc whereval(val, x: [?dx] ?tx): [] int {
+   // --------------------------------------------------------------------
+   // be careful with empty arrays
+   // --------------------------------------------------------------------
+   assert(x.rank == 1);
+   assert(tx == val.type);
+   var n = x.size;
+   if n == 0 then {
+      halt("--> whereval: empty array");
+   }
+   const xf = dx.first;       // try to be agnostic
+   const xl = dx.last;        // try to be agnostic
+   const m = max(n/10,2);     // guess that 10% of x elements == val
+   var dw = {0..#m};          // ... but at least 2
+   var ww: [dw] int;          // where they are
+   var ct = 0;                // count how many
+   if val.type == real && isnan(val) then {  // be careful with NANs
+      for i in xf..xl do {
+         if isnan(x[i]) then {
+            dgrow(ct,dw);
+            ww[ct] = i;
+            ct += 1;
+         }
+      }
+   }
+   else {                                    // just find them
+      for i in xf..xl do {
+         if x[i] == val then {
+            dgrow(ct,dw);
+            ww[ct] = i;
+            ct += 1;
+         }
+      }
+   }
+   dw = {0..#ct};                   // adjust domain
+   return ww;
+}
+// -------------------------------------------------------------------
+// --> diff: calculates the 1st discrete difference of a 1D array
+// bool--int "magic" is used!
+//
+// important: diff *always* returns a 0-based array
+// -------------------------------------------------------------------
+proc diff(ref ax: [] ?tx) {
+   assert (ax.rank == 1);     // must be 1D
+   var n = ax.size;           // count elements
+   ref x = ax.reindex(1..n);  // reindex
+   // -------------------------------------------------------------------
+   // return an array with a domain that is compatible with ax's domain
+   // -------------------------------------------------------------------   
+   type td;
+   if tx == bool then {
+      td = int;
+   }
+   else {
+      td = tx;
+   }
+   var dd = {0..#(n-1)};      // always return a 0-based array
+   var dx: [dd] td;           // the return array
+   dx = x[2..n] - x[1..n-1];  // differentiated
+   return dx;                 // end of the story
+}
+// -------------------------------------------------------------------
+// --> linspace: my equivalent of a (simple!) numpy linspace. returns
+// a 0-based 1D array with n linearly interpolated values including,
+// and between, start and stop.
+// -------------------------------------------------------------------
+proc linspace(
+   start: real,               // the first value
+   stop: real,                // the last value
+   n: int                     // how many do you want?
+   ): [] real {
+   var x: [0..#n] real;
+   assert( n > 1);
+   var dx = (stop-start)/(n-1);
+   forall i in 0..#n do {     // this is a parallel algorithm!
+      x[i] = start + i*dx;
+   }
+   return x;
+}
+// -------------------------------------------------------------------
+// --> flip: flips a 1D array
+// -------------------------------------------------------------------
+proc flip(ref ax: [] ?ta ) where (ax.rank == 1) {
+   var n = ax.size;
+   ref x = ax.reindex(0..#n);
+   for i in 0..n/2 do {
+      x[i] <=> x[n-1-i];
+   }
+}
+// -----------------------------------------------------------------------------
+// --> interp: searches the array x until x[i] < xc ; then linearly
+// interpolates. THE ARRAY x MUST BE SORTED!
+//
+// 2008-05-15T09:44:20 -- version for an array of shorts
+// 2008-05-15T11:07:07 -- implementing a much faster binary search (hopefully)
+// 2021-04-16T16:57:14 -- translating from C to Chapel
+// -----------------------------------------------------------------------------
+proc interp(
+   const in xc: ?tc,         // the value being searched  
+   const ref ax: [] ?tx,     // the table                 
+   const ref ay: [] ?ty      // the table 
+   ) : ty where (ax.rank == 1) && (ay.rank == 1) {
+   // -----------------------------------------------------------------------------
+   // the painful checks
+   // -----------------------------------------------------------------------------
+   assert(tc == tx);
+   const n = ax.size;
+   // -------------------------------------------------------------------------------------------
+   // must have at least 2 points for interpolation
+   // -------------------------------------------------------------------------------------------
+   if ( n < 2 ) then {
+      halt("--> interp: x,y size must be >= 2") ;
+   }
+   // -------------------------------------------------------------------------------------------
+   // error conditions: xc must be within (x[0],x[n-1])
+   // -------------------------------------------------------------------------------------------
+   ref x = ax.reindex(0..n-1);
+   ref y = ay.reindex(0..n-1);
+   if  (xc < x[0]) || (xc > x[n-1])  then {
+      halt("xc = ",xc," out of range:",x[0]," ",x[n-1]) ;
+   }
+   // -------------------------------------------------------------------------------------------
+   // a simple binary search algol
+   // -------------------------------------------------------------------------------------------
+   var iu = n - 1 ;
+   var il = 0 ;
+   var im: int;
+   while iu - il > 1 do {
+      im = (iu + il)/2 ;
+      if xc <= x[im] { 
+	 iu = im ;
+      }
+      else {
+	 il = im ;
+      }
+   }
+   // -------------------------------------------------------------------------------------------
+   // linear interpolation and return
+   // -------------------------------------------------------------------------------------------
+   var dx = (x[iu] - x[il]) ;
+   var dy =  (y[iu] - y[il]) ;
+   var m = dy/dx ;
+   return (y[il] + m * (xc - x[il])) ;
+}
+// -----------------------------------------------------------------------------
+// --> indx_interp: the indices around the interpolated value
+//
+// 2021-05-16T11:52:51 -- may be quite useful! but unfinished!
+// -----------------------------------------------------------------------------
+proc indx_interp(
+   const in xc: ?tc,         // the value being searched  
+   const ref ax: [] ?tx      // the table                 
+   ) : (int,int) {
+// -----------------------------------------------------------------------------
+// the painful checks
+// -----------------------------------------------------------------------------
+   assert(tc == tx);
+   assert(ax.rank == 1);
+   const n = ax.size;
+   const xfirst = ax.domain.first;
+// -------------------------------------------------------------------------------------------
+// must have at least 2 points for interpolation
+// -------------------------------------------------------------------------------------------
+   if ( n < 2 ) then {
+      halt("--> interp: x size must be >= 2") ;
+   }
+// -------------------------------------------------------------------------------------------
+// error conditions: xc must be within (x[0],x[n-1])
+// -------------------------------------------------------------------------------------------
+   ref x = ax.reindex(0..n-1);
+   if  (xc < x[0]) || (xc > x[n-1])  then {
+      halt("xc = ",xc," out of range:",x[0]," ",x[n-1]) ;
+   }
+// -------------------------------------------------------------------------------------------
+// a simple binary search algol
+// -------------------------------------------------------------------------------------------
+   var iu = n - 1 ;
+   var il = 0 ;
+   var im: int;
+   while iu - il > 1 do {
+      im = (iu + il)/2 ;
+      if xc <= x[im] { 
+	 iu = im ;
+      }
+      else {
+	 il = im ;
+      }
+   }
+// -------------------------------------------------------------------------------------------
+// the bracketing indices of the *original* (not reindexed!) array
+// -------------------------------------------------------------------------------------------
+   return (il+xfirst,iu+xfirst);
+}
+// -----------------------------------------------------------------------------
+// The partition, quickselect, indxpartition and indxquickselect are an
+// adaptation of two sources:
+//
+// 1. https://stackoverflow.com/questions/5380568/\
+//    algorithm-to-find-k-smallest-numbers-in-array-of-n-items
+// 2. https://en.wikipedia.org/wiki/Quickselect
+//
+// I did not understand the 1. well, but it helped implement 2., with
+// adaptations
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// --> partition: private partition for indxquickselect
+// -----------------------------------------------------------------------------
+private proc partition(ref A: [] real, in left: int, in right: int): int 
+   where A.rank == 1 {
+   const pivot = A[right];
+   var i = left;
+   var x: int;
+   for x in left..right-1 do { // (x = left; x < right; x++) {
+      if (A[x] < pivot) then {
+         A[i] <=> A[x];
+         i += 1;
+      }
+   }
+   A[i] <=> A[right];
+   return i;
+}
+
+
+// -----------------------------------------------------------------------------
+// --> quickselect: returns the kth smallest value of A. After it
+//     is called with quickselect(indx,A,A.indices.first,A.indices.last,k):
+//
+// A[A.indices.first] is the smallest
+// A[A.indices.first+1] is the second smallest
+// ...
+// A[A.indices.first+k-1] is the kth smallest
+// -----------------------------------------------------------------------------
+proc quickselect(
+   ref A: [] real,       // partially sorted array
+   in left: int,         // left index
+   in right: int,        // right index
+   in k: int             // k smallest
+   ): real {
+   if left == right then {
+      return A[left];
+   }
+// -----------------------------------------------------------------------------   
+// p is position of pivot in the partitioned array
+// -----------------------------------------------------------------------------   
+   var p = partition(A, left, right); 
+   if k == p then {
+      return A[k] ;
+   }
+   else if k < p then {
+      return quickselect(A,left,p-1,k);
+   }
+   else {
+      return quickselect(A,p+1,right,k);
+   }
+}
+
+// -----------------------------------------------------------------------------
+// --> indxpartition: private partition for indxquickselect
+// -----------------------------------------------------------------------------
+private proc indxpartition(
+   ref indx: [] int,     // indexes of partially sorted array
+   ref A: [] real,       // A remains intact
+   in left: int,         // left index
+   in right: int         // right index
+   ): int 
+   where A.rank == 1 {
+   const pivot = A[indx[right]];
+   var i = left;
+   var x: int;
+   for x in left..right-1 do { 
+      if (A[indx[x]] < pivot) then {
+         indx[i] <=> indx[x];
+         i += 1;
+      }
+   }
+   indx[i] <=> indx[right];
+   return i;
+}
+// -----------------------------------------------------------------------------
+// --> indxquickselect: returns the index of the kth smallest value. After it
+//     is called with indxquickselect(indx,A,A.indices.first,A.indices.last,k):
+//
+// A[indx[1]] is the smallest
+// A[indx[2]] is the second smallest
+// ...
+// A[indx[k]] is the kth smallest
+// -----------------------------------------------------------------------------
+proc indxquickselect(
+   ref indx: [] int,     // indexes of partially sorted array
+   ref A: [] real,       // A remains intact
+   in left: int,         // left index
+   in right: int,        // right index
+   in k: int             // k smallest values
+   ) : int where (A.rank == 1) {
+   assert (A.shape == indx.shape);
+// -----------------------------------------------------------------------------
+// is this game over?
+// -----------------------------------------------------------------------------
+   if left == right then {
+      return indx[left];
+   }
+// -----------------------------------------------------------------------------   
+// p is position of pivot in the partitioned array
+// -----------------------------------------------------------------------------   
+   var p = indxpartition(indx, A, left, right); 
+   if k == p then {
+      return indx[k] ;
+   }
+   else if k < p then {
+      return indxquickselect(indx,A,left,p-1,k);
+   }
+   else {
+      return indxquickselect(indx,A,p+1,right,k);
+   }
+}
+// -----------------------------------------------------------------------------
+// --> fillgaps_li: fill gaps in array ax (flagged with NANs) by linear
+// interpolation from adjacent data.
+// -----------------------------------------------------------------------------
+proc fillgaps_li(ref ax: [] real) where ax.rank == 1 {
+   var nx = ax.size;
+   ref x = ax.reindex(1..nx);
+   // --------------------------------------------------------------------------
+   // if passed everything but there are still gaps, fills each gap with linear
+   // interpolation. first, find each gap:
+   // --------------------------------------------------------------------------
+   var db = {0..nx+1};
+   var binv: [db] bool;       // true when NAN in x 
+   binv[0] = false;           // place sentinels around binv
+   binv[1..nx] = isNan(x);    // and find nans inside
+   binv[nx+1] = false;        // place sentinels around binv
+   var dinv = diff(binv);     // differentiate binv
+   // --------------------------------------------------------------------------
+   // now +1 marks the beginning of gaps, and -1 their end, in dinv. the number
+   // of -1s is equal to the number of +1s. ibeg and iend are the indices of the
+   // last valid datum before each gap and first valid datum after each gap in
+   // 1-based array x
+   // --------------------------------------------------------------------------
+   var ibeg = whereval(1,dinv);         // note that ibeg is 0-based
+   var iend = whereval(-1,dinv) + 1;    // note that iend is 0-based
+   var nruns = ibeg.size;               // how many gaps?
+   assert (nruns == iend.size);
+   // --------------------------------------------------------------------------
+   // finally, linear interpolation of gaps: we place two sentinels with the
+   // mean at both ends of x. Since there are nans in x, we need to use nanstat1
+   // --------------------------------------------------------------------------
+   var (nnans, xmean): 2*real = nanstat1(x);
+   // --------------------------------------------------------------------------
+   // xcat acts like x with two sentinels at the extremeties
+   // --------------------------------------------------------------------------
+   var xcat: [db] real;
+   xcat[0] = xmean;
+   xcat[1..nx] = x;
+   xcat[nx+1] = xmean;
+   // --------------------------------------------------------------------------
+   // (parallel!) loop over gaps: linear interpolation with linspace
+   // --------------------------------------------------------------------------
+   forall ir in 0..#nruns do {
+      var irb = ibeg[ir];          // last valid position before
+      var ire = iend[ir];          // first valid position after
+      var xstart = xcat[irb];      // valid datum before
+      var xstop  = xcat[ire];      // valid datum after
+      var gaplen = ire - irb + 1;  // gap size
+      var xfill = linspace(xstart,xstop,gaplen);  // linear interp
+      x[irb+1..ire-1] = xfill[1..gaplen-2];       // fill gaps
+   }
+   return;
+}
+// -----------------------------------------------------------------------------
+// --> find_factors: obtains all integer factors of n and returns them in array
+// factors
+// -----------------------------------------------------------------------------
+proc find_factors(const in n:int): [] int {
+   var D = {0..9};           // maybe 10 factors at most?
+   var factors: [D] int = 0;
+   var i = 1;
+   var k = 0;                 // count the factors
+   while i * i <= n do {
+      if n % i == 0 then {
+         dgrow(k,D);
+         factors[k] = i ;
+         k += 1;
+         if i != n / i then {
+            dgrow(k,D);
+            factors[k] = n/i ;
+            k += 1;
+         }
+      }
+      i += 1;
+   }
+   D = {0..k-1}; 
+   heapsort(factors);
+   return factors;
+}
+
+// -----------------------------------------------------------------------------
+// --> prime_factors: brute-force calculation of prime factors.
+// https://stackoverflow.com/questions/15347174/python-finding-prime-factors
+// -----------------------------------------------------------------------------
+
+proc prime_factors(in n: int): [] int {
+   var D = {0..9};
+   var factors: [D] int = 0;
+   var k = 0 ;
+   var i = 2;
+   while i*i <= n do {
+      if n % i then {
+         i += 1;
+      }
+      else {
+         n /= i;
+         dgrow(k,D);
+         factors[k] = i ;
+         k += 1;
+      }
+   }
+   if n > 1 then {
+      dgrow(k,D);
+      factors[k] = n;
+      k += 1;
+   }
+   D = {0..k-1};
+   return factors;
+}
+
+// -----------------------------------------------------------------------------
+// --> howmany: how many instances of x happen in array a?
+// -----------------------------------------------------------------------------
+proc howmany(
+   const in x: ?t,            // the instance
+   const ref a: [] t          // the array
+   ): int                     // the number of instances
+{
+   // --------------------------------------------------------------------------
+   // everything is obvious from here on
+   // --------------------------------------------------------------------------
+   var n = 0;
+   if (t == real(32) || t == real(64)) && isNan(x) then {
+      for e in a do {
+         if isNan(e) then {
+            n += 1;
+         }
+      }
+   }
+   else {
+      for e in a do {
+         if e == x then {
+            n += 1;
+         }
+      }
+   }
+   return n;
+}
+// -----------------------------------------------------------------------------
+// --> howmanyleg: how many instances of x < x0, x == x0, x > x0 happen in array
+// a?  Does not accept isNan(x0).
+// -----------------------------------------------------------------------------
+proc howmanyleg(
+   const in x0: ?t,           // the instance
+   const ref a: [] t          // the array
+   ): (int,int,int,int)       // the number of instances
+{
+   // --------------------------------------------------------------------------
+   // everything is obvious from here on
+   // --------------------------------------------------------------------------
+   var nlt, neq, ngt, nnan: int;
+   ngt = 0;
+   neq = 0;
+   nlt = 0;
+   nnan = 0;
+   assert (!isNan(x0));
+   for e in a do {
+      if e < x0 then {
+         nlt += 1;
+      }
+      else if e == x0 then {
+         neq += 1 ;
+      }
+      else if e > x0 then {
+         ngt += 1;
+      }
+      else {
+         nnan += 1;
+      }
+   }
+   return (nlt,neq,ngt,nnan);
+}

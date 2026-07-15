@@ -1,0 +1,3 @@
+  /home/nldias/Dropbox/nldchapel/modules:
+  wildcard ada*.chpl
+  -rw-rw-r-- 1 nldias 11K jul  4  2024 ada.chpl

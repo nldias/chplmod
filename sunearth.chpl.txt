@@ -1,0 +1,278 @@
+//from math import acos, asin, atan2, cos, exp, log, modf, pi, sin, sqrt, tan
+//TwoPi = 2*pi
+// --------------------------------------------------------------------
+// ddse
+//
+// 2019-05-04T13:46:15 fumbling around
+// 2020-03-30T15:38:03 reverting to a faithful reproduction of my
+//                     dear ddstx in weather.c
+// --------------------------------------------------------------------
+def ddse(yea,mon,day):
+   '''
+   ddse: declination and distance sun-earth a funcion of 
+   (year, month, day)
+
+   based on
+
+   Van Flandern, T. C. and Pulkkinen, K. F. (1979) "Low Precision
+   Formulae for Planetary Positions" - The Astronomical Journal
+   Supplement Series, 41,391:411.
+   '''
+// --------------------------------------------------------------------
+   assert(isinstance(yea,int))
+   assert(isinstance(mon,int))
+   assert(isinstance(day,int))
+// --------------------------------------------------------------------
+// At GMT noon: this is done with purely integer arithmetic
+// --------------------------------------------------------------------
+   JD = 367 * yea - ( 7 * (yea + (mon + 9) // 12 ) // 4 ) \
+      + ( 275 * mon // 9 + day ) + 1721014 
+// --------------------------------------------------------------------
+// Obtain
+// tee == thousands of Julian years from 2000
+// TC == hundreds of Julian years from 1900
+// --------------------------------------------------------------------
+   tee = float(JD - 2451545) ;
+   TC = tee/36525.0 + 1.0 ;
+// --------------------------------------------------------------------
+// other variables
+// --------------------------------------------------------------------
+   LS = 0.779072 + 0.00273790931 * tee  // mean longitude, Sun
+   GS = 0.993126 + 0.00273777850 * tee  // mean anomaly, Sun
+   G5 = 0.056531 + 0.00023080893 * tee  // mean anomaly, Jupiter
+   OM = 0.347343 - 0.00014709391 * tee  // longitude of lunar ascending mode
+// --------------------------------------------------------------------
+// extracts fractional part
+// --------------------------------------------------------------------
+   (LS,ipart) = modf(LS)
+   (GS,ipart) = modf(GS)
+   (G5,ipart) = modf(G5)
+   (OM,ipart) = modf(OM)
+// --------------------------------------------------------------------
+// converts to radians
+// --------------------------------------------------------------------
+   LS = LS * TwoPi 
+   GS = GS * TwoPi 
+   G5 = G5 * TwoPi 
+   OM = OM * TwoPi 
+// --------------------------------------------------------------------
+// obtains VS
+// --------------------------------------------------------------------
+   VS = + 0.39785 * sin( LS ) \
+        - 0.01000 * sin( LS - GS ) \
+        + 0.00333 * sin( LS + GS ) \
+        - 0.00021 * TC * sin( LS ) \
+        + 0.00004 * sin( LS + 2.0 * GS ) \
+        - 0.00004 * cos( LS ) \
+        - 0.00004 * sin( OM - LS ) \
+        + 0.00003 * TC * sin( LS - GS )
+// --------------------------------------------------------------------
+// obtains US
+// --------------------------------------------------------------------
+   US = + 1.0 \
+        - 0.03349 * cos( GS ) \
+        - 0.00014 * cos( 2.0 * GS ) \
+        + 0.00008 * TC * cos( GS ) \
+        - 0.00003 * sin( GS - G5 )
+// --------------------------------------------------------------------
+// Sun's declination
+// --------------------------------------------------------------------
+   delta = asin( VS / sqrt(US) ) ;
+// --------------------------------------------------------------------
+// distance Sun-Earth in the form (r/a) where a is the length
+// of the largest semi-axis of the Earth's orbit, i.e.: the equivalent
+// to one astronomical unit, and rr is the Sun-Earth distance
+// --------------------------------------------------------------------
+   rr = 1.00021 * sqrt( US )
+   return (delta,rr)
+
+// --------------------------------------------------------------------
+// sunman
+//
+// version of 2019-04-23T09:58:05
+// --------------------------------------------------------------------
+def sunman(yea,mon,day,sec=0.0):
+   '''
+   sunman: only the sun mean anomaly a funcion of (year, month,day)
+
+   based on
+
+   Van Flandern, T. C. and Pulkkinen, K. F. (1979) "Low Precision
+   Formulae for Planetary Positions" - The Astronomical Journal
+   Supplement Series, 41,391:411.
+   '''
+// --------------------------------------------------------------------
+   assert(isinstance(yea,int))
+   assert(isinstance(mon,int))
+   assert(isinstance(day,int))
+// --------------------------------------------------------------------
+// At GMT noon: this is done with purely integer arithmetic
+// --------------------------------------------------------------------
+   JD = + 367 * yea \
+        - 7*(yea + (mon + 9)/12)/4 \
+        - 3*((yea + (mon - 9)/7)/100 + 1)/4 \
+        + 275*mon/9 + day + 1721029
+// --------------------------------------------------------------------
+// trying to get more accuracy by calculating seconds
+// --------------------------------------------------------------------
+   JD = float(JD + sec/86400.0)
+// --------------------------------------------------------------------
+// Obtains tee,
+// --------------------------------------------------------------------
+   tee = float(JD - 2451545.0) ;
+// --------------------------------------------------------------------
+// other variables
+// --------------------------------------------------------------------
+   GS = 0.993126 + 0.00273777850 * tee  // mean anomaly, Sun
+   (GS,ipart) = modf(GS)
+// --------------------------------------------------------------------
+// converts to radians
+// --------------------------------------------------------------------
+   GS = GS * TwoPi 
+   return(GS)
+
+// --------------------------------------------------------------------
+// rsds
+//
+// created 2020-03-30T16:15:43 since my MSc thesis the solar constant
+// has changed! Now it is 1361.5 (according to Wikipedia)
+// --------------------------------------------------------------------
+def rsds(lat,rr,delta):
+   '''rsds: extra-atmospheric solar radiation and maximum number of hours of
+      sunshine as a function of latitude, the Sun-Earth distance and
+      the Sun's declination, where:
+
+   lat   -- latitude (radians)
+   rr    -- Sun-Earth distance in A.U.  
+   delta -- Sun's declination (radians)
+
+   returns
+
+   rsea  -- extra-atmospheric solar radiation ( W/m2 ) 
+   dsmax -- maximum sunshine duration (hours)    
+
+   References: Sellers, W.D. (1965) " Physical Climatology " . The
+   University of Chicago Press / Chicago & London
+   '''
+   rs0 = 1361.5       // solar constant                                  
+// ---------------------------------------------------------------------
+// calculates H = half-duration of a day in radians 
+// ---------------------------------------------------------------------
+   H = acos( - tan(lat) * tan(delta) )
+// ---------------------------------------------------------------------
+// calculates *dsmax
+// ---------------------------------------------------------------------
+   dsmax = 24.0 * H / pi 
+// ---------------------------------------------------------------------
+// calculates rsea
+// ---------------------------------------------------------------------
+   rsea = ( rs0 / pi ) * (1.0/rr**2) * ( H * sin(lat) * sin(delta) +
+           cos(lat) * cos(delta) * sin(H) )
+   return (rsea,dsmax)
+
+// --------------------------------------------------------------------
+// rseat
+//
+// created 2020-08-13T15:01:51 since my MSc thesis the solar constant
+// has changed! Now it is 1361.5 (according to Wikipedia)
+//
+// return an instantaneous value, adequate for hourly or sub-hourly
+// time intervals
+// --------------------------------------------------------------------
+def rseat(tnoon,t,lat,rr,delta):
+   '''
+   rsds: instantaneous extra-atmospheric solar radiation and maximum
+   number of hours of sunshine as a function of latitude, the 
+   Sun-Earth distance and the Sun's declination, where:
+
+   tnoon -- time of solar noon, in decimal hours
+   t     -- time, in decimal hours (9.47, etc.)
+   lat   -- latitude (radians)
+   rr    -- Sun-Earth distance in A.U.  
+   delta -- Sun's declination (radians)
+
+   returns
+
+   rsea  -- extra-atmospheric solar radiation at time t ( W/m2 ) 
+   cosZ  -- cosine of Zenith angle of the Sun
+
+   References: Sellers, W.D. (1965) " Physical Climatology " . The
+   University of Chicago Press / Chicago & London
+   '''
+   rs0 = 1361.5       // solar constant
+// ---------------------------------------------------------------------
+// calculates H = half-duration of a day in radians 
+// ---------------------------------------------------------------------
+   H = acos( - tan(lat) * tan(delta) )
+// --------------------------------------------------------------------
+// the first thing we need to calculate is the hour angle!
+// --------------------------------------------------------------------
+   h = (pi/12.0)*(tnoon - t)
+   if ( h < -H  or h > H):    // control nightime periods
+      return(0.0,0.0)
+   pass                       // daytime!
+// --------------------------------------------------------------------
+// cosine of Zenith angle
+// --------------------------------------------------------------------
+   cosZ = (sin(delta)*sin(lat)+cos(delta)*cos(lat)*cos(h))
+// --------------------------------------------------------------------
+// extra-terrestrial radiation at time t
+// --------------------------------------------------------------------
+   rsea = rs0*cosZ/(rr**2) 
+   return (rsea,cosZ)
+// --------------------------------------------------------------------
+// rseac calculates the instantaneous clear-sky solar radiation,
+// following
+//
+// - Crawford, T. M. & Duchon, C. E. An improved parameterization for
+//   estimating effective atmospheric emissivity for use in calculating
+//   daytime downwelling longwave radiation J Appl Meteorol, 1999, 38,
+//   474-480
+//
+// - Meyers, T. & Dale, R. Predicting daily insolation with hourly
+//   cloud height and coverage Journal of climate and applied
+//   meteorology, 1983, 22, 537-545
+//
+// - Smith, W. L. Note on the relationship between total precipitable
+//   water and surface dew point Journal of Applied Meteorology, 1966,
+//   5, 726-727
+//
+// as a function of year, month, day, latitude (radians), local solar
+// noon time and local time, Smith's lambda (Table 1), atmospheric
+// pressure (Pa) and Dew Point temperature (K)
+//
+// Nelson Luís Dias
+// 2020-08-13T16:05:54
+// 2020-08-13T16:05:57
+// --------------------------------------------------------------------
+def rseac(year,mon,day,lat,tnoon,t,slambda,pa,Td):
+   '''instantaneous clear-sky solar radiation, as a function of year,
+   month, day, latitude (radians), local solar noon time, local time
+   Smith's lambda, atmospheric pressure (Pa) and DewPoint temperature
+   (K)
+
+   '''
+   (delta,rr) = ddse(year,mon,day) // sun's decl and sun-earth distance
+// --------------------------------------------------------------------   
+// instantaneous extra-terrestrial solar radiation and Zenith angle
+// --------------------------------------------------------------------
+   (rsea,cosZ) = rseat(tnoon,t,lat,rr,delta)
+   if ( rsea == 0.0 ) :  // nighttime? return
+      return 0.0
+   pass
+// --------------------------------------------------------------------
+// optical air mass at 101325 Pa
+// --------------------------------------------------------------------
+   m = 35*(1224*cosZ**2 + 1)**(-0.5)
+   pa /= 1000.0               // use pressure in kPa in formulas
+   TrTg = 1.021 - 0.084*(m*(949*pa*1.0e-5+0.051))**(0.5)
+// --------------------------------------------------------------------
+// Dew point temperature
+// --------------------------------------------------------------------
+   Td = Td - 273.15           // from Kelvin to Celsius
+   Td = Td*9.0/5.0 + 32.0     // from Celsius to Fahrenheit
+   u = exp(0.1133 - log(slambda + 1.0) + 0.0393*Td)
+   Tw = 1 - 0.077*(u*m)**0.3
+   Ta = 0.935**m
+   return rsea*(TrTg*Tw*Ta)
+      

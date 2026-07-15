@@ -1,0 +1,210 @@
+// 
+// This is a simple implementation of DBSCAN intended to explain the algorithm.
+// 
+//
+// @author: Chris McCormick
+//
+
+
+use ssr only amax;
+use dgrow;
+use List;
+
+private var Npts = 1;
+private var Ddom = {1..1,1..1};
+private var Dist: [Ddom] real;
+
+proc CalcDist(
+   const ref ax: [?dpts] real,     // abscissas
+   const ref ay: [ dpts] real      // ordinates
+   ) where ax.rank == 1 {
+   Npts = ax.size;                 // # of pts 
+   ref x = ax.reindex(1..Npts);    // as the Fortran god intended
+   ref y = ay.reindex(1..Npts);    // as the Fortran god intended
+   Ddom = {1..Npts,1..Npts};       // redim Ddom
+   // --------------------------------------------------------------------------
+   // Calculate all distances.
+   // --------------------------------------------------------------------------
+   for i in 1..Npts do {
+      Dist[i,i] = 0.0;
+      for j in i+1..Npts do {
+         Dist[i,j] = sqrt((x[i] - x[j])**2 + (y[i] - y[j])**2);
+         Dist[j,i] = Dist[i,j];
+      }
+   }
+   return;
+}
+// -----------------------------------------------------------------------------
+// --> dbscan: Cluster the dataset (x,y) using the DBSCAN algorithm.
+// 
+// dbscam takes a dataset `D` (a list of vectors), a threshold distance `eps`,
+// and a required number of points `MinPts`.
+//
+// It will return an array of cluster labels. The label -1 means noise, and then
+// the clusters are numbered starting from 1.
+// -----------------------------------------------------------------------------
+proc dbscan(
+   const in MinPts: int,      // the minimum # of pts in a cluster
+   const in eps: real,        // the radius of a cluster
+   const ref x: [?dpts] real, // the abscissas
+   const ref y: [dpts] real,  // the ordinates
+   out nC: int,               // the number of clusters
+   ref aptl: [dpts] int       // array with cluster id of each pt
+   ) where x.rank == 1 {
+   // --------------------------------------------------------------------------
+   // Calculate normalized distances one and for all. It also calculates Npts.
+   // --------------------------------------------------------------------------
+   CalcDist(x,y);
+   ref ptlabel = aptl.reindex(1..Npts);      // Reindex aptl from 1 to Npts
+   // --------------------------------------------------------------------------
+   // This array will hold the final cluster assignment for each point in D.
+   // There are two reserved values:
+   //  0 - Indicates a noise point
+   // -1 - Means the point hasn't been considered yet. Initially all labels are
+   // -1.
+   // --------------------------------------------------------------------------
+   ptlabel = -1;              // The cluster id of each point is initially -1.
+   nC = 0;                    // nC is the ID of the current cluster. At the
+                              // end, it will be the number of identified
+                              // clusters.
+   // --------------------------------------------------------------------------
+   // This outer loop is just responsible for picking new seed points--a point
+   // from which to grow a new cluster.  Once a valid seed point is found, a new
+   // cluster is created, and the cluster growth is all handled by the
+   // `expandCluster` routine.
+   //    
+   // For each point with index iP in the Dataset D, do: 
+   // (`iP` is the index of the datapoint, rather than the datapoint itself.)
+   // --------------------------------------------------------------------------
+   for iP in 1..Npts do {
+      // -----------------------------------------------------------------------
+      // Only points that have not already been claimed can be picked as new
+      // seed points.  If the point's label is not -1, continue to the next
+      // point.
+      // -----------------------------------------------------------------------
+      if !(ptlabel[iP] == -1) then {
+         continue;
+      }
+      // -----------------------------------------------------------------------
+      // Find all of P's neighboring points.
+      // -----------------------------------------------------------------------
+      var NeighborPts = regionQuery(iP, eps);
+      // -----------------------------------------------------------------------
+      // If the number is below MinPts, this point is noise.  This is the only
+      // condition under which a point is labeled NOISE --- when it's not a
+      // valid seed point. A NOISE point may later be picked up by another
+      // cluster as a boundary point (this is the only condition under which a
+      // cluster label can change --- from NOISE to something else).
+      // -----------------------------------------------------------------------
+      if NeighborPts.size < MinPts then {
+         ptlabel[iP] = 0;
+      }
+      // -----------------------------------------------------------------------
+      // Otherwise, if there are at least MinPts nearby, use this point as the 
+      // seed for a new cluster.    
+      // -----------------------------------------------------------------------
+      else {
+         nC += 1;
+         growCluster(iP, nC, MinPts, eps, ptlabel, NeighborPts);
+      }
+      // -----------------------------------------------------------------------
+      // All data has been clustered!
+      // -----------------------------------------------------------------------
+   }
+   return;
+}
+// -----------------------------------------------------------------------------
+// --> regionQuery: Find all points in dataset `D` within distance `eps` of
+// point `iP`.
+//
+// This function calculates the distance between a point P and every other 
+// point in the dataset, and then returns only those points which are within a
+// threshold distance `eps`.
+// -----------------------------------------------------------------------------
+private proc regionQuery(
+   const in iP: int,
+   const in eps: real
+   ): list(int) {
+   var neighbors = new list(int);  // `neighbors` is a list in disguise
+   // --------------------------------------------------------------------------
+   //  For each point in the dataset...
+   // --------------------------------------------------------------------------
+   var k = -1;
+   for nP in 1..Npts do {
+      // -----------------------------------------------------------------------        
+      // If the distance is below the threshold, add it to the neighbors list.
+      // -----------------------------------------------------------------------
+      if Dist[iP,nP] <= eps then {
+         neighbors.pushBack(nP);
+      }
+   }
+   return neighbors;
+}
+// -----------------------------------------------------------------------------
+// --> growCluster: Grow a new cluster with label `C` from the seed point `iP`.
+//    
+// This function searches through the dataset to find all points that belong
+// to this new cluster. When this function returns, cluster `C` is complete.
+// -----------------------------------------------------------------------------
+private proc growCluster(
+   const in iP: int,               // indx of the seed pt for this new cluster
+   const in C: int,                // the label for this new cluster.  
+   const in MinPts: int,           // minimum required number of neighbors
+   const in eps: real,             // threshold distance
+   ref ptlabel: [?dpts] int,       // array storing the cluster labels for all
+                                   // dataset points
+   ref NeighborPts: list(int)      // all of the neighbors of `iP`
+   ) where (ptlabel.rank == 1) {
+   // --------------------------------------------------------------------------
+   // Assert that ptlabel is 1-based. NeighborPts, being a list, is 0-based.
+   // --------------------------------------------------------------------------
+   assert (dpts.low == 1);
+   // --------------------------------------------------------------------------
+   //  Assign the cluster label to the seed point.
+   // --------------------------------------------------------------------------
+   ptlabel[iP] = C;
+   // --------------------------------------------------------------------------
+   // Look at each neighbor of iP (neighbors are referred to as nP).
+   // NeighborPts will be used as set of points to search --- that is, it will
+   // grow as we discover new branch points for the cluster. The FIFO behavior
+   // is accomplished by using a while-loop rather than a for-loop.  In
+   // NeighborPts, the points are represented by their index in the 1-based
+   // dataset arrays.
+   // --------------------------------------------------------------------------
+   var i = 0;
+   while i < NeighborPts.size do {  
+      // -----------------------------------------------------------------------
+      // If nP was labelled NOISE during the seed search, then we know it's not
+      // a branch point (it doesn't have enough neighbors), so make it a leaf
+      // point of cluster C and move on.
+      // -----------------------------------------------------------------------
+      var nP = NeighborPts[i];
+      if ptlabel[nP] == 0 then {
+         ptlabel[nP] = C;
+      }
+      // -----------------------------------------------------------------------
+      // Otherwise, if nP isn't already claimed, claim it as part of C.
+      // -----------------------------------------------------------------------
+      else if ptlabel[nP] == -1 then {
+         ptlabel[nP] = C;          // Add nP to cluster C.
+         // --------------------------------------------------------------------
+         // Find all the neighbors of nP.
+         // --------------------------------------------------------------------
+         var nPNeighborPts = regionQuery(nP, eps);    
+         // --------------------------------------------------------------------
+         // If nP has at least MinPts neighbors, it's a branch point!  Add all
+         // of its neighbors to NeighborPts by growing its domain and including
+         // NpNeighborPts.
+         // --------------------------------------------------------------------
+         if nPNeighborPts.size >= MinPts then {
+            // -----------------------------------------------------------------
+            // Add the new neighbors
+            // -----------------------------------------------------------------
+            NeighborPts.pushBack(nPNeighborPts);
+         }
+      }
+      i += 1;
+   }
+   return;
+}
+

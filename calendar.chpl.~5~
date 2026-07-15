@@ -1,0 +1,56 @@
+config const describe = false;
+const doc = "\
+=================================================================================\
+==> calendar: additional utilities for converting from julian (1--366) to        \
+yyyy-mm-dd                                                                       \
+=================================================================================\
+";
+if describe then {
+   writeln(doc);
+   exit(0);
+}
+// -----------------------------------------------------------------------------
+// Nelson Luís Dias
+// 2023-02-09T08:35:17
+// 2024-11-19T08:53:47 converting NNDays to a const array
+// 2025-05-22T12:26:01 Getting Leap from calendar.c Bissexto
+// -----------------------------------------------------------------------------
+const NNDays: [false..true][1..12] int = 
+   [[31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+    [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]];
+// NNDays[false] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+// NNDays[true] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+proc Leap(const in Ano: int): bool {
+   return ( ( ( Ano % 4 == 0 ) && ( Ano % 100 != 0 ) ) || ( Ano % 400 == 0 ) ) ;
+}
+// -----------------------------------------------------------------------------
+// --> JtoMD: From Julian [1--366] to (Month,Day)
+// -----------------------------------------------------------------------------
+proc JtoMD(
+   const in bis: bool,        // leap year?
+   in jday: int               // julian day, 1--366
+   ): (int,int) { 
+   var Month = 1;
+   while ( jday > NNDays[bis][Month] ) do {
+      jday -= NNDays[bis][Month] ;
+      Month += 1 ;
+   }
+   return (Month,jday);
+}
+// -----------------------------------------------------------------------------
+// --> MDtoJ: From (Month,Day) to Julian 
+// -----------------------------------------------------------------------------
+proc MDtoJ(
+   const in bis: bool,        // leap year?
+   const in Month: int,       // Month
+   in Day: int                // initially, Day of Month
+   ): int { 
+   var i = 1 ;
+   while  ( i < Month) do { 
+      Day += NNDays[bis][i]  ;
+      i += 1;
+   }
+   return Day;
+}
+
+

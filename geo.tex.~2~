@@ -1,0 +1,203 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper,top=3cm,right=2cm,left=2cm,bottom=2.5cm]{geometry}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext}
+\usepackage[ttscale=0.875]{libertine}
+\input{math.tex}
+\usepackage[libertine,cmintegrals,cmbraces]{newtxmath}
+\usepackage[round]{natbib}
+\usepackage[american]{babel}
+\usepackage[small,compact]{titlesec}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{array}
+\usepackage{tabularray}
+\usepackage{diagbox}
+\usepackage{comment}
+\usepackage[defaultlines=4,all]{nowidow}
+\usepackage{needspace}
+\usepackage{graphicx}
+\usepackage{mathrsfs}
+\usepackage{ifpdf}
+\usepackage{upgreek}
+\usepackage[pdftex,colorlinks=true,%
+   urlcolor=blue,
+   linkcolor=blue,
+   citecolor=blue,
+   filecolor=blue]{hyperref}
+\usepackage{iexec}
+\input{mylistings.tex}
+\input{mydescription.tex}
+\input{ira.tex}
+\renewcommand{\ttdefault}{lmtt}% default cmtt
+\newcommand{\texttk}[1]{\texttt{\bfseries #1}}
+\newcommand{\ul}{\underline}
+
+\usepackage{titlesec}
+
+\UseTblrLibrary{booktabs}
+
+% Customize the part title: [shape]{format}{label}{sep}{before}
+\titleformat{\part}[display]
+  {\normalfont\LARGE\bfseries\raggedright} % Font size (e.g., \huge, \Large, \large)
+  {\partname\ \thepart}                 % Label (e.g., Part I)
+  {20pt}                                % Separation between label and title
+  {\LARGE}                               % Code before the title
+
+
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+\title{Documentation for \texttt{geo.chpl}}
+
+\author{Nelson Luís Dias (\texttt{nelsonluisdias@gmail.com})}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\texttt{geo} is a module for things that vary spatially
+\end{abstract}
+
+
+\part{Theory}\label{part:theory}
+
+A vector $(u,v)$ can be in either of 4 quadrants. In this module, the
+quadrants are 0,1,2,3 (instead of 1,2,3,4). In procedure \texttt{inxy}
+below, we compute consecutive vectors from a fixed point $(x_p,y_p)$
+to the points $(x_b,y_b)$ along a closed boundary. For each
+consecutive pair, there is an increment that determines the difference
+in sector between the first and second vectors.
+
+These increments can be subsumed in a ``from/to'' matrix. The ``from''
+is the sector of the first vector, and is listed along the lines $i$
+of the matrix; the ``to'' is the sector of the second vector, and is
+listed along the columns $j$. Most, but not all, of the matrix's elements are equal
+to $j-i$. In position $0,3$, $+3$ is
+replaced by $-1$, because when the first vector is in sector 0 and the
+second vector is in sector 3, there is a ``$-1$'' rotation; by the
+same token, when the first vector is in sector 3 and the second vector
+is in sector 0, there is a ``$+1$'' rotation.
+
+In \texttt{inxy}, we sum the increments as $(x_b,y_b)$ wanders around
+the boundary. If $(x_p,y_p)$ is outside of the boundary, the sum will
+be zero; otherwise, it will be $\pm 4$.
+
+\newcommand{\scr}[1]{\scriptsize{#1}}
+
+\begin{table}
+  \caption{The skew-symmetric matrix of sector increments $j-i$. In position $0,3$, $+3$ is
+    replaced by $-1$, and in position $3,0$, $-3$ is replaced by $+1$  \label{tab:from-to}}\centering
+  \begin{tabular}{|l|C{1.2cm}|C{1.2cm}|C{1.2cm}|C{1.2cm}|}
+    \hline
+    \diagbox{from $i$}{to $j$} & 0              & 1              & 2              & 3              \\
+    \hline
+    0             & $\phantom{+}0$ & $+1$           & $+2$           & $-1$           \\
+    1                          & $-1$           & $\phantom{+}0$ & $+1$           & $+2$           \\
+    2                          & $-2$           & $-1$           & $\phantom{+}0$ & $+1$           \\
+    3                          & $+1$           & $-2$           & $-1$           & $\phantom{+}0$ \\
+    \hline
+  \end{tabular}
+\end{table}
+  
+
+\clearpage
+
+
+\part{Constants and procedures}\label{part:const-procs}
+
+\section{Constants}
+
+There are no constants yet.
+
+
+
+\section{\texttt{findquad}: in which quadrant is a point/vector?}
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'private proc findquad' -A3
+  geo.chpl}
+
+\texttt{findquad} is private and should not be called from outside of \texttt{geo.chpl}.
+
+\lstinputlisting[style=lstchapel, numbers=none,
+  title={ \texttt{findquad}: finds the quadrant to which the point/vector
+    (delx,dely) belongs.}
+]{xtract.txt}
+
+
+\begin{comment}
+
+
+\section{\texttt{viscair}: dynamic viscosity of air}
+
+From \cite{montgomery--viscosity-air}.
+
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc viscair' -A2
+  atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none,
+  title={ \texttt{viscair}: dynamic viscosity of air
+    ($\mathrm{Pa\,s}$).}
+]{xtract.txt}
+
+\section{\texttt{difmom}: kinematic viscosity of air}
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc difmom' -A4
+  atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none,
+  title={ \texttt{difmom}: kinematic viscosity of air
+    ($\mathrm{m^2\,s^{-1}}$).}
+]{xtract.txt}
+
+\section{\texttt{difheat}: thermal diffusivity of air}
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc difheat' -A4
+  atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none,
+  title={ \texttt{difheat}: thermal diffusivity of air
+    ($\mathrm{m^2\,s^{-1}}$).}
+]{xtract.txt}
+
+\section{\texttt{difvap}: diffusivity of water vapor in air}
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc difvap' -A4
+  atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none,
+  title={ \texttt{difvap}: thermal diffusivity of air
+    ($\mathrm{m^2\,s^{-1}}$).}
+]{xtract.txt}
+
+
+\section{\texttt{rho2x}: convert density to molar fraction}
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc rho2x' -A5
+  atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none,
+  title={ \texttt{rho2x}: convert density to molar fraction.}
+]{xtract.txt}
+
+
+\section{\texttt{pressalt}: atmospheric pressure as a function of altitude}
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc pressalt' -A2
+  atmgas.chpl}
+
+\lstinputlisting[style=lstchapel, numbers=none, title={
+    \texttt{pressalt}: atmospheric pressure as a function of altitude
+    in a standard atmosphere.}  ]{xtract.txt}
+
+\end{comment}
+
+\bibliography{abbrevs,all}
+\bibliographystyle{apalike}
+\end{document}
+
+

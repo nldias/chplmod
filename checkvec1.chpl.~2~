@@ -1,0 +1,25 @@
+use vec;
+var A = new vec({1..10});
+for i in 1..10 do A[i] = 2*i;
+writeln(A.arr);
+var B = new vec({1..10});
+for i in 1..10 do B[i] = i;
+writeln(B.arr);
+var C = A + 2*B;
+writeln(C.arr);
+var x: [1..10] real = 1.0;
+C = A + tovec(x);
+writeln(C.arr);
+writeln(C[2..5]);
+C[2..5] = 1.0;
+foreach i in 1..5 do {
+   A[i] = B[i] + C[i] ;
+}
+writeln(B.arr[1..5]);
+writeln(C.arr[1..5]);
+writeln(A.arr[1..5]);
+x = A.arr + 2*B.arr;
+writeln(x);
+C.arr[1..5] = A.arr[1..5] + 2*B.arr[1..5];
+writeln(C[1..5]);
+

@@ -1,0 +1,130 @@
+\documentclass[12pt]{article}
+\usepackage[margin=2.5cm,tmargin=3cm,bmargin=2cm]{geometry}
+%\usepackage{ae}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext}
+\usepackage[ttscale=0.875]{libertine}
+\usepackage{amsmath}
+\usepackage{natbib}
+\input{math.tex}
+\input{code.tex}
+\title{\texttt{stat:} my library of statistics}
+\author{Nelson Luís Dias}
+\date{\today}
+\begin{document}
+\maketitle
+
+\section{\texttt{reglina:} a linear regression through the origin}
+Let
+\begin{equation}
+  Y = ax + E
+\end{equation}
+where $Y$ is a random variable, $E$ is a random variable independent of $x$, and $x$ is not
+random. 
+
+Form the objective function
+\begin{equation}
+   F_O(a) = \frac{1}{n} \sum_{i=1}^n ( y_i - ax_i)^2
+\end{equation}
+Differentiating with respect to $a$ gives the least-squares estimate of $a$:
+\begin{align}
+\sum_{i=1}^n 2(y_i - ax_i)(-x_i) &= 0, \nonumber \\
+-\sum_{i=1}^n x_i y_i + a\sum_{i=1}^n x_i^2 &= 0,\nonumber \\
+a = \frac{\sum_{i=1}^n x_i y_i}{\sum_{i=1}^n x_i^2}.
+\end{align}
+The ``error'' involved in estimating $a$ can be found by re-interpreting $a$ (and $y_i$) as
+random variables, and assuming that the $Y_i$'s are independent:
+\begin{align}
+A &= \frac{\sum_{i=1}^n x_i Y_i}{\sum_{i=1}^n x_i^2},\nonumber \\
+\mathrm{Var}[A] &= \frac{\sum_{i=1}^n x_i^2 \mathrm{Var}[Y]}{\left[\sum_{i=1}^n x_i^2\right]^2}.
+\end{align}
+Replacing the expectations with sample moments:
+\begin{align}
+s^2_A &= \frac{\sum_{i=1}^n x_i^2}{\left[\sum_{i=1}^n x_i^2\right]^2}s^2_Y,\nonumber\\
+s^2_A &= \frac{s^2_Y}{\sum_{i=1}^n x_i^2}.
+\end{align}
+The mean square error shouldn't be too difficult to find, now:
+\begin{align}
+s^2 &= \frac{1}{n} \sum_{i=1}^n \left[ y_i - ax_i\right]^2\nonumber \\
+    &= \frac{1}{n}\sum_{i=1}^n \left[ y_i^2 - 2 a x_i y_i + a^2 x_i^2\right]\nonumber \\
+    &= \frac{1}{n} \left[ \sum_{i=1}^n y_i^2 - 2a \sum_{i=1}^n x_i y_i + a^2 \sum_{i=1}^n x_i^2\right].
+\end{align}
+
+
+
+\section{\texttt{stat\_NO}: um otimizador não-linear simples}
+
+
+
+Dado um conjunto de $n$ pontos $(x_i, y_i)$, desejo ajustar uma função $f(x;\veg{\xi})$, onde
+$\veg{\xi} = (\xi_1, \ldots, \xi_m)$ é um vetor de $m$ parâmetros.  No caso mais geral (e talvez
+mais comum), $f$ é não-linear em $\veg{\xi}$.
+
+O encaminhamento clássico da solução é procurar um ponto crítico de uma função objetivo.  Defino
+\begin{equation}
+   F(\veg{\xi}) \equiv \sum_{i=1}^n\left[ y_i - f(x_i;\veg{\xi})\right]^2 \label{eq:def-FO}
+\end{equation}
+Em um ponto crítico de $F$:
+\begin{equation}
+   \parder{F}{\xi_i} \equiv 2G_i(\veg{\xi}) = -2\sum_{k=1}^n [y_k -
+   f(x_k;\veg{\xi})]\parder{f}{\xi_i} = 0.\label{eq:def-Gi} 
+\end{equation}
+As equações (\ref{eq:def-Gi}), $i = 1,\ldots,n$, podem ser resolvidas com um método de
+Newton-Raphson multimensional, usando uma estimativa $\veg{\xi}_0$ do ponto crítico e resolvendo
+\begin{equation}
+   G_i(\veg{\xi}_1) \approx G_i(\veg{\xi}_0) + 
+     \sum_{j=1}^m \parder{G_i(\veg{\xi}_0)}{\xi_j}(\xi_{1j} - \xi_{0j})
+   = 0\label{eq:NR-g}
+\end{equation}
+para $\xi_{1j}, \; j=1,\ldots,m$.  Calculo
+\begin{align}
+   \parder{G_i(\veg{\xi}_0)}{\xi_j} &= \sum_{k=1}^n
+   \parder{f(x_k;\veg{\xi}_0)}{\xi_j}\parder{f(x_k;\veg{\xi}_0)}{\xi_i} - [y_k -
+   f(x_k;\veg{\xi}_0)]\parpar{f}{\xi_i}{\xi_j} \nonumber\\
+   &\approx  \sum_{k=1}^n \parder{f(x_k;\veg{\xi}_0)}{\xi_j}\parder{f(x_k;\veg{\xi}_0)}{\xi_i}.\label{eq:ap-dgidxij}
+\end{align}
+Em (\ref{eq:ap-dgidxij}), estamos desprezando o termo envolvendo as derivadas segundas de $f$
+simplesmente porque temos a esperança de diminuir o nosso esforço analítico e computacional. Uma
+justificativa mais detalhada por ser encontrada em \cite{press.teukolsky.ea:numerical}. 
+
+Seja $\vet{J}$ a matriz jacobiana cujos elementos são $\partial{G_i}/\partial{\xi_j}$; a solução
+de (\ref{eq:NR-g}) em linguagem matricial é
+\begin{align}
+   \vet{G} + \vet{J}\boldsymbol{\cdot}[\veg{\xi}_1 - \veg{\xi}_0] &= \vet{0}\nonumber\\
+   \vet{J}\boldsymbol{\cdot}[\veg{\xi}_1 - \veg{\xi}_0] &= -\vet{G}\nonumber\\
+   [\veg{\xi}_1 - \veg{\xi}_0] &= \vet{J}^{-1}\boldsymbol{\cdot}[-\vet{G}]\label{eq:matrixNR-g}\\
+   \veg{\xi}_1 &= \veg{\xi}_0 +\vet{J}^{-1}\boldsymbol{\cdot}[-\vet{G}]\label{eq:novaestxi}
+\end{align}
+com $\vet{J}$ e $\vet{G}$ avaliados em $\veg{\xi}_c$.
+
+
+Agora, as derivadas primeiras podem ser estimadas se eu tiver 2 pontos iniciais:
+\begin{align}
+   \xi_{1i} &= \xi_{0i} + \Delta\xi_i;\label{eq:deltaxij}\\
+   \parder{f(x_k;\veg{\xi}_0)}{\xi_i} 
+      &\approx \frac{f(x_k;\veg{\xi}_0+\Delta\xi_i\vet{e}_i) - f(x_k;\veg{\xi}_0)}{\Delta \xi_i}.\label{eq:dfdxij}
+\end{align}
+Evidentemente, a derivada parcial na direção $i$ envolve uma variação apenas na direção do vetor
+unitário $\vet{e}_i$.  Portanto, um algoritmo de cálculo pode ser iniciado a partir de um ponto
+$\veg{\xi}_0$ no espaço de parâmetros, e um incremento ``pequeno'' $\Delta\veg{\xi}$. Pode ser
+preciso especificar $\Delta\xi_i$'s diferentes para cada $i$.  
+
+O algoritmo em questão agora é:
+
+\begin{tabbing}
+\hspace*{\parindent}
+\=(a) \qquad \=Inicialize $\xi_{0j}$, $\Delta\xi_j$ e um critério de parada $\epsilon$;\\
+\>(b) \>calcule $G_i$ com (\ref{eq:def-Gi}) para $\veg{\xi}=\veg{\xi}_0$, e $\partial f/\partial\xi_j$ com (\ref{eq:dfdxij});\\
+\>(c) \>calcule $\partial G_i/\partial \xi_j$ com (\ref{eq:ap-dgidxij});\\
+\>(d) \>resolva o sistema de equações lineares (\ref{eq:matrixNR-g}) para $\Delta\veg{\xi} =
+\veg{\xi}_1 - \veg{\xi}_0$;\\
+\>(e) \>Faça $\veg{\xi}_0 = \veg{\xi}_1$;\\
+\>(f) \>se $|\Delta\veg{\xi}| < \epsilon$, páre; senão, volte para (b).
+\end{tabbing}
+
+
+\bibliography{all}
+\bibliographystyle{chicago}
+
+\end{document}

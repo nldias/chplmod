@@ -1,0 +1,10 @@
+use narray;
+const dc = {1..10};
+var x = new narray(dc);
+proc printarray(
+   const in dom: domain(1);
+   const in a: narray(dom);
+   ) {
+   writeln(a);
+}
+printarray(dc,x);

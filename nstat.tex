@@ -1,0 +1,1090 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper,top=3cm,right=2cm,left=2cm,bottom=2.5cm]{geometry}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext}
+\usepackage[ttscale=0.875]{libertine}
+\input{math.tex}
+\usepackage[libertine,cmintegrals,cmbraces]{newtxmath}
+\usepackage[round]{natbib}
+\usepackage[american]{babel}
+\usepackage[small]{titlesec}
+\usepackage{amsmath}
+\usepackage{iexec}
+\usepackage{listings}
+%% \usepackage{subscript}
+%% \usepackage{enumerate}
+%% \usepackage{booktabs}
+%% \usepackage{tabu}
+%% \usepackage{setspace}
+%% \usepackage{comment}
+\usepackage[defaultlines=4,all]{nowidow}
+\usepackage{needspace}
+\usepackage{graphicx}
+\usepackage{mathrsfs}
+\usepackage{ifpdf}
+\usepackage{upgreek}
+\usepackage[pdftex,colorlinks=true,%
+   urlcolor=blue,
+   linkcolor=blue,
+   citecolor=blue,
+   filecolor=blue]{hyperref}
+\input{mylistings.tex}
+\input{ira.tex}
+\renewcommand{\ttdefault}{lmtt}% default cmtt
+\newcommand{\texttk}[1]{\texttt{\bfseries #1}}
+
+
+
+\title{Documentation for \texttt{nstat.chpl}}
+
+\author{Nelson Luís Dias (\texttt{nelsonluisdias@gmail.com})}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Notation}
+
+In this document,
+\begin{align}
+  \Exv\{X\} &= \int_{\mathbb{R}} xf_X(x)\,\md{x}, \\
+  \Var\{X\} &= \int_{\mathbb{F}} \left(x -
+  \Exv\{x\}\right)^2f_X(x)\,\md{x}
+\end{align}
+(where $f_X(x)$ is the probability density function of $X$) are
+population parameters, whereas
+\begin{align}
+  \Exv\{x\} = \overline{x} = \frac{1}{n}\sum_{i=1}^n x_i, \\
+  \Var\{x\} = \frac{1}{n}\sum_{i=1}^n \left(x_i-\overline{x}\right)^2
+\end{align}
+are sample statistics.
+
+\section{\texttt{stat1}: mean of an array}
+
+\subsection{Use}
+
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc stat1' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+\subsection{Theory}
+
+Calculates
+\begin{equation}
+\overline{x} = \frac{1}{n}\sum_{i=1}^n x_i,
+\end{equation}
+where $n$ is the size of the array $\vet{x}$.
+
+\section{\texttt{stat2}: mean and biased variance of an array}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc stat2' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+\subsection{Theory}
+
+Calculates
+\begin{align}
+  \overline{x} &= \frac{1}{n}\sum_{i=1}^n x_i{\,},\\
+  \Var\{x\}    &= \frac{1}{n}\sum_{i=1}^n \left( x_i - \overline{x}\right)^2.
+\end{align}
+where $n$ is the size of the array $\vet{x}$.
+
+\section{\texttt{nanstat1}: mean, ignoring nans}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc nanstat1' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+\subsection{Theory}
+Calculates
+\begin{align}
+  \delta_i &= \begin{cases}
+    1 & x_i \neq \text{NaN},\\
+    0 & x_i = \text{NaN},
+  \end{cases}\\
+  m &= \sum_{i=1}^n \delta_i,\\
+\overline{x} &= \frac{1}{m}\sum_{i=1}^n \delta_i x_i.
+\end{align}
+
+\section{\texttt{nanstat2}: mean and biased variance, ignoring nans}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc nanstat2' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+\subsection{Theory}
+Calculates
+\begin{align}
+  \delta_i &= \begin{cases}
+    1 & x_i \neq \text{NaN},\\
+    0 & x_i = \text{Nan}.
+  \end{cases}\\
+  m &= \sum_{i=1}^n \delta_i,\\
+  \overline{x} &= \frac{1}{m}\sum_{i=1}^n \delta_i x_i,\\
+  \Var\{x\} &= \frac{1}{m}\sum_{i=1}^n (\delta_i x_i-\overline{x})^2.
+\end{align}
+
+\section{\texttt{wstat1}: weighted mean}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc wstat1' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+\subsection{Theory}
+Calculates
+\begin{align}
+  W &= \sum_{i=1}^n w_i,\\
+  \overline{x} &= \frac{1}{W}\sum_{i=1}^n w_i x_i,
+\end{align}
+where $w_i$ are the weights of the data points $x_i$, and
+$n$ is the size of the arrays $\vet{w}$ and $\vet{x}$.
+
+\section{\texttt{wstat2}: weighted mean and variance}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc wstat2' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+\subsection{Theory}
+Calculates
+\begin{align}
+  W &= \sum_{i=1}^n w_i,\\
+  \overline{x} &= \frac{1}{W}\sum_{i=1}^n w_i x_i,\\
+  \Var\{x\} &= \frac{1}{W}\sum_{i=1}^n w_i (x_i-\overline{x})^2
+\end{align}
+where $w_i$ are the weights of the data points $x_i$, and
+$n$ is the size of the arrays $\vet{w}$ and $\vet{x}$.
+
+\section{\texttt{nanwstat1}: weighted mean, ignoring NaNs}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc nanwstat1' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+\subsection{Theory}
+Calculates
+\begin{align}
+  \delta_i &= \begin{cases}
+    1 & x_i \neq \text{NaN},\\
+    0 & x_i = \text{Nan}.
+  \end{cases}\\
+  W &= \sum_{i=1}^n \delta_iw_i,\\
+  \overline{x} &= \frac{1}{W}\sum_{i=1}^n w_i \delta_i x_i,\\
+\end{align}
+where $w_i$ are the weights of the data points $x_i$, and
+$n$ is the size of the arrays $\vet{w}$ and $\vet{x}$.
+
+
+\section{\texttt{gmean}: geometric mean}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc gmean' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+
+\subsection{Theory}
+
+Given a sequence $(x_1, x_2, \ldots, x_n)$ of \emph{strictly positive
+  real numbers}, the geometric mean is
+\begin{align}
+  \tilde{x} &= \left[\prod_{i=1}^n x_i \right]^{1/n}\label{eq:gmean-prod}
+\end{align}
+For large $n$ and small individual values of $x_i$, however,
+(\ref{eq:gmean-prod}) can lead to underflow. It is much more robust to
+write
+\begin{align}
+  \tilde{x} &= \exp\left\{ \ln \left[ \left(\prod_{i=1}^n x_i
+      \right)^{1/n}\right]\right\}\nonumber \\
+    &= \exp\left[\frac{1}{n} \sum_{i=1}^n \ln(x_i)\right].\label{eq:gmean-explog}
+\end{align}
+
+\section{\texttt{logmod}: log-modulus function}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc logmod' -A2 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+\subsection{Theory}
+
+See (\ref{eq:def-logmod}) below.
+
+\section{\texttt{expmod}: exponential-modulus function}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc expmod' -A2 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+\subsection{Theory}
+
+See (\ref{eq:def-expmod}) below.
+
+
+
+\section{\texttt{gmom}: geometric-modulus mean}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc gmom' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+
+\subsection{Theory}
+
+
+
+\texttt{gmom} is my own humble attempt to generalize the idea of a
+geometric mean to sequences containing negative and null values, as well as
+positive.
+
+First, consider a sequence $(x_1, x_2, \ldots, x_n)$ containing only
+negative values. It is reasonable to define its ``geometric'' mean as
+\begin{align}
+  \tilde{x} &= -\exp\left[\frac{1}{n} \sum_{i=1}^n \ln(\left|x_i\right|)\right].\label{eq:gmean-neg}
+\end{align}
+For a sequence containing negative, null, and positive values,
+$\ln(\cdot)$ can no longer be used, and the singularity at the origin
+needs to be avoided. A function that has those attributes and is
+asymptotically equal to $\ln(\cdot)$ for large positive values of its
+argument is the \emph{log-modulus} function introduced by
+\cite{john1980alternative}:
+\begin{equation}
+\logmod(x) \equiv \sign(x)\ln(|x| + 1).\label{eq:def-logmod}
+\end{equation}
+Note that, asymptotically,
+\begin{equation}
+  \logmod(x) \sim \begin{cases}
+    x, & x \sim 0, \\
+    \sign(x)\ln(|x|), & x \gg 1,
+  \end{cases}
+\end{equation}
+and that $\logmod(x)$ is odd.
+
+In order to mimic (\ref{eq:gmean-explog}), we need the inverse of $\logmod$:
+\begin{align*}
+  y &= \sign(x)\ln(|x| + 1),  \\
+  \sign(y)y &= \ln(|x| + 1),  \\
+  \intertext{(because $\logmod$ is odd)}
+  \exp\left(\sign(y)y\right) &= |x| + 1, \\
+  \exp\left(|y|\right) &= |x| + 1, \\
+  |x| &= \exp\left(|y|\right) - 1, \\
+  x &= \sign(y)\left[ \exp\left(|y|\right) - 1\right],
+\end{align*}
+whence
+\begin{equation}
+\expmod(x) \equiv \sign(x)\left[ \exp\left(|x|\right) - 1\right]\label{eq:def-expmod}
+\end{equation}
+is the \emph{exponential-modulus} function.
+
+We are now ready to define the \emph{geometric-modulus} mean:
+\begin{equation}
+\tilde{x} \equiv \expmod\left[ \frac{1}{n}\sum_{i=1}^n
+  \logmod(x_i)\right].
+\label{eq:def-gmom}
+\end{equation}
+Evidently, for a sequence of positive real values where $x_i \gg 1\;
+\forall i = 1, \ldots, n$, (\ref{eq:def-gmom}) will produce results
+which are very close to (\ref{eq:gmean-explog}). However, if on the
+other hand $x_i \ll 1\; \forall i = 1, \ldots, n$, (\ref{eq:def-gmom})
+will be very much like the arithmetic mean, which is undesirable. The
+solution to always obtain a ``geometric mean''-like behavior for any
+sequence (now including possibly null and negative values as well) is
+to re-scale before averaging, by means of the following sequence of
+operations:
+\begin{align}
+  \delta &= \frac{\min(|x_i|)}{16}, \qquad x_i \ne 0, \label{eq:delta}\\
+  \xi_i &= \frac{x_i}{\delta}, \label{eq:xi}\\
+  \tilde{\xi} &= \expmod\left[ \frac{1}{n}\sum_{i=1}^n
+    \logmod(\xi_i)\right], \label{eq:tilde-xi}\\
+  \tilde{x} &= \delta \tilde{\xi}.\label{eq:tilde-x}
+\end{align}
+The factor 16 in (\ref{eq:delta}) is arbitrary and is meant to force
+all non-null $\xi$ to be ``sufficiently'' far from $\pm 1$.
+
+
+\section{\texttt{covar}: the covariance}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc covar' -A6 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+
+\subsection{Theory}
+
+Calculates
+\begin{equation}
+\Cov\{x,y\} = \frac{1}{n}\sum_{i=1}^n (x_i - \overline{x})(y_i - \overline{y}),
+\end{equation}
+where $\overline{x}$ is the mean of $\vet{x}$, $\overline{y}$ is
+the mean of $\vet{y}$, and $n$ is their size.
+Note that you must calculate $\overline{x}$ and $\overline{y}$
+\emph{before} calling \texttt{covar}.
+
+\section{\texttt{trivar}: the trivariance}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc trivar' -A8 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+
+\subsection{Theory}
+
+Calculates
+\begin{equation}
+\Trv\{x,y,z\} = \frac{1}{n}\sum_{i=1}^n (x_i - \overline{x})(y_i -
+\overline{y})(z_i - \overline{z}),
+\end{equation}
+where $\overline{x}$ is the mean of $\vet{x}$, $\overline{y}$ is
+the mean of $\vet{y}$, $\overline{z}$ is the mean of $\vet{z}$, and $n$ is their size.
+Note that you must calculate $\overline{x}$, $\overline{y}$ and
+$\overline{z}$ 
+\emph{before} calling \texttt{covar}.
+
+\section{\texttt{median}: the median}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc median' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+
+\subsection{Theory}
+
+Calculates the median of the data in array $\vet{x}=(x_0,x_1,\ldots,x_{n-1})$.
+The array is sorted by an index array $I$ such that $x_{I_0}$ is the
+minimum value and $x_{I_{n-1}}$ is the maximum value. Returns
+\begin{equation}
+  x_{\text{median}} = \begin{cases}
+    \frac{1}{2}\left( x_{I_{n/2-1}}+x_{I_{n/2}}\right) & \text{$n$ is even}, \\
+    x_{I_{n/2}} & \text{$n$ is odd}.
+  \end{cases}
+\end{equation}
+
+The domain of \texttt{ax} \emph{does not have to start at 0}, because
+\texttt{median} takes care to reindex it internally.
+
+\section{\texttt{nanmedian}: the median, ignoring NaNs}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc nanmedian' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+
+\subsection{Theory}
+
+Calculates the median of the data in an array. First, all NaNs are
+purged from the array. Then, the (resulting) array
+$\vet{x}=(x_0,x_1,\ldots,x_{n-1})$ is sorted by an index array $I$
+such that $x_{I_0}$ is the minimum value and $x_{I_{n-1}}$ is the
+maximum value. Returns
+\begin{equation}
+  x_{\text{median}} = \begin{cases}
+    \frac{1}{2}\left( x_{I_{n/2-1}}+x_{I_{n/2}}\right) & \text{$n$ is even}, \\
+    x_{I_{n/2}} & \text{$n$ is odd}.
+  \end{cases}
+\end{equation}
+
+The domain of \texttt{ax} \emph{does not have to start at 0}, because
+\texttt{nanmedian} takes care to reindex it internally.
+
+\section{\texttt{quartiles}: returns the quartiles of an array}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc quartiles' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+
+\subsection{Theory}
+
+
+Makes a copy of the array; sorts it; the cumulative distribution
+function over the sorted array $(x_0, x_1, \ldots, x_{n-1})$ is
+\begin{equation}
+F(x_i) = \frac{i}{n-1}.
+\end{equation}
+Then interpolates
+\begin{equation}
+q_j = F^{-1}\left( j\times 0.25\right), \qquad j = 1,2,3,
+\end{equation}
+and returns $(q_1, q_2, q_3)$.
+
+\section{\texttt{whiskers}: returns the minimum, quartiles, and maximum of an array}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc whiskers' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+
+\subsection{Theory}
+
+
+Makes a copy of the array; sorts it; the cumulative distribution
+function over the sorted array $(x_0, x_1, \ldots, x_{n-1})$ is
+\begin{equation}
+F(x_i) = \frac{i}{n-1}.
+\end{equation}
+Then interpolates
+\begin{equation}
+q_j = F^{-1}\left( j\times 0.25\right), \qquad j = 1,2,3,
+\end{equation}
+and returns the array $\vet{w} = (x_0,q_1, q_2, q_3,x_{n-1})$.
+
+\section{\texttt{xbins}: bins data into a ragged array}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc xbins' -A7 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+
+
+\subsection{Theory}
+
+Given the arrays $\vet{x}$, $\vet{y}$ of data points, and the bin
+limits
+$x_{bmin}, \Delta x_b, x_{bmax}$, such that
+\begin{equation}
+xb_j = xb_{min} + (j+0.5)\Delta x_b,
+\end{equation}
+returns $\vet{y_b}$ where $y_{bj}$  is a
+(ragged) array that contains all data points $y_i$ such that
+\begin{equation}
+  x_{bj}- \Delta x_b <= x_i < x_{bj} +\Delta x_b .
+\end{equation}
+
+\section{\texttt{outlimits}: defines limits to detect outliers based
+  on the interquartile range}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc outlimits' -A4 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+\subsection{Theory}
+
+Inspired by \cite{merchant1999toward}, \cite{kilpatrick2015decade}, etc.: given an array $\vet{x}$ of
+data and a coefficient $\Delta$ ($\Delta = 1.5$ by default, but it can
+be modified), proposes the limits
+\begin{align}
+  x_{min} &= q_1 - \Delta (q_3 - q_1), \\
+  x_{max} &= q_3 + \Delta (q_3 - q_1),
+\end{align}
+where $(q_1,q_2,q_3)$ are the quartiles, $(q_3 - q_1)$ is the
+\emph{interquartile range}, and $(x_{min},x_{max})$ is the range outside of
+which data are to be considered outliers.
+
+\section{\texttt{force\_bounds}: constrains x to the bounds xmin, xmax.}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc force_bounds' -A10 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+\subsection{Theory}
+
+The code above speaks for itself.
+
+
+\section{\texttt{reglin}: linear regression}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc reglin(' -A4 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+
+\subsection{Theory}
+
+
+Given a pair of data $\vet{x}=(x_1,\ldots,x_{n})$,
+$\vet{y}=(y_1,\ldots,y_{n})$, calculates the linear regression
+\[
+\widehat{y} = ax + b,
+\]
+where
+\begin{align}
+  a &= \frac{\Cov\{x,y\}}{\Var\{x\}}, \label{eq:a-est}\\
+  b &= \overline{y} - a\overline{x},\label{eq:b-est}
+\end{align}
+and
+\begin{equation}
+r = \frac{\Cov\{x,y\}}{\sqrt{\Var\{x\}\Var\{y\}}}\label{eq:r-est}
+\end{equation}
+is the correlation coefficient.
+
+\section{\texttt{reglina:} linear regression through the origin}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc reglina(' -A8 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+\subsection{Theory}
+
+Let
+\begin{equation}
+  Y = ax + E,
+\end{equation}
+where $Y$ is a random variable, $E$ is a random variable independent of $x$, and $x$ is not
+random. 
+
+Form the objective function
+\begin{equation}
+   F_O(a) = \frac{1}{n} \sum_{i=1}^n ( y_i - ax_i)^2.
+\end{equation}
+Differentiating with respect to $a$ gives the least-squares estimate of $a$:
+\begin{align}
+\sum_{i=1}^n 2(y_i - ax_i)(-x_i)            & = 0, \nonumber                                                                    \\
+-\sum_{i=1}^n x_i y_i + a\sum_{i=1}^n x_i^2 & = 0,\nonumber                                                                     \\
+a = \frac{\sum_{i=1}^n x_i y_i}{\sum_{i=1}^n x_i^2}.
+\end{align}
+The ``error'' involved in estimating $a$ can be found by re-interpreting $a$ (and $y_i$) as
+random variables, and assuming that the $Y_i$'s are independent:
+\begin{align}
+A                                           & = \frac{\sum_{i=1}^n x_i Y_i}{\sum_{i=1}^n x_i^2},\nonumber                       \\
+\Var\{A\}                                   & = \frac{\sum_{i=1}^n x_i^2 \Var\{Y\}}{\left[\sum_{i=1}^n x_i^2\right]^2}.
+\end{align}
+Replacing the expectations with sample moments:
+\begin{align}
+\Var\{a\}                                   & = \frac{\sum_{i=1}^n x_i^2}{\left[\sum_{i=1}^n x_i^2\right]^2}\Var\{y\},\nonumber \\
+                                            & = \frac{\Var\{y\}}{\sum_{i=1}^n x_i^2};                                           \\
+s_a                                         & = \sqrt{\frac{\Var\{y\}}{\sum_{i=1}^n x_i^2}}.
+\end{align}
+The standard error of estimate shouldn't be too difficult to find, now:
+\begin{align}
+s_e^2                                       & = \frac{1}{n} \sum_{i=1}^n \left[ y_i - ax_i\right]^2\nonumber                    \\
+                                            & = \frac{1}{n}\sum_{i=1}^n \left[ y_i^2 - 2 a x_i y_i + a^2 x_i^2\right]\nonumber  \\
+                                            & = \frac{1}{n} \left[ \sum_{i=1}^n y_i^2 - 2a \sum_{i=1}^n x_i y_i + a^2 \sum_{i=1}^n x_i^2\right].
+\end{align}
+Finally, by definition the coefficient of determination is
+\begin{equation}
+c_d = 1 - \frac{s_e^2}{\Var\{y\}}.
+\end{equation}
+
+\section{\texttt{reglinpar:} linear regression, with error estimates}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc reglinpar(' -A10 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+\subsection{Theory}
+
+We follow \citet[Chapter 4]{benjamim.cornell:probability}
+
+The general probabilistic model is
+\begin{equation}
+  Y = ax + b + E,
+\end{equation}
+where $Y$ is a random variable, $E$ is a random variable independent of $x$, and $x$ is not
+random. 
+
+The estimates of $a$ and $b$ and the correlation coefficient $r$
+are already given in (\ref{eq:a-est}), (\ref{eq:b-est}) and
+(\ref{eq:r-est}). The standard error of estimate is given by
+Eq. (4.3.27) of \cite{benjamim.cornell:probability}:
+\begin{equation}
+s_e^2 = \frac{n}{n-2}\left(1 - r^2\right)\Var\{y\}.\label{eq:se-est}
+\end{equation}
+The variances of $a$ and $b$ (actually assumed to be random variables
+$A$ and $B$ and then estimated by the sample statistics) are
+\begin{align}
+  s_a^2 &= \frac{s_e^2}{n\Var\{x\}}, \\
+  s_b^2 &= \frac{s_e^2}{n}\left(1 + \frac{\overline{x}^2}{\Var\{x\}} \right).
+\end{align}
+
+\section{\texttt{ols}: Ordinary least squares}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc ols' -A11 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+\subsection{Theory}
+
+Calculates the multiple linear regression coefficients $\vet{c}$ of
+\begin{equation}
+\met{\widehat{y}\,}_{n\times 1} = \met{x}_{n\times m}\met{c}_{m\times 1},
+\end{equation}
+where the $x$ data are
+\begin{equation}
+  \met{x} = \begin{bmatrix}
+    1 & x_{11} & x_{12} & \ldots & x_{1(m-1)} \\
+    1 & x_{21} & x_{22} & \ldots & x_{2(m-1)} \\
+      &        &        & \vdots \\
+    1 & x_{n1} & x_{n2} & \ldots & x_{1(m-1)} \\
+  \end{bmatrix}.
+\end{equation}
+For details, see for example Chapter 7 of
+\cite{netter1983applied-linear-regression-models}. Start with the
+corresponding equation with $y$ data,
+\begin{equation}
+\met{y}_{n\times 1} = \met{x}_{n\times m}\met{c}_{m\times 1},
+\end{equation}
+which cannot be solved for $\met{c}$, and do:
+\begin{align}
+     \met{x}^\tr_{m\times n}\met{y}_{n\times 1} &=
+     \underbrace{\met{x}^\tr_{m\times n}\met{x}_{n\times
+         m}}_{\met{A}_{m\times m}}\met{c}_{m\times 1} \nonumber \\
+     &= \met{A}_{m\times m}\met{c}_{m\times 1}   \Rightarrow \nonumber
+     \\
+     \met{c}_{m\times 1} &= \met{A}^{-1}_{m\times
+       m}\met{x}^\tr_{m\times n}\met{y}_{n\times 1}\blob
+\end{align}
+The standard error of estimate is
+\begin{equation}
+s_e^2 = \frac{1}{n-m}\met{\met{y}-\met{\,\widehat{y}\,}}^\tr\met{\met{y}-\met{\,\widehat{y}\,}};
+\end{equation}
+the covariance matrix of $\vet{c}$ is
+\begin{equation}
+\met{\Cov\{\vet{c}\}} = s_e^2\,\met{A}^{-1},
+\end{equation}
+and the adjusted coefficient of multiple determination
+\cite[][Eq. (7.33)]{netter1983applied-linear-regression-models} is
+\begin{equation}
+C_D = 1 - \frac{n-1}{n}\frac{s_e^2}{\Var\{y\}}.
+\end{equation}
+
+
+\section{\texttt{init\_lowess}: initialize data for futher lowess
+  estimates}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc init_lowess' -A5 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+\subsection{Theory}
+
+Let $\vet{x}$ and $\vet{y}$ be two data arrays containing data points
+$(x_i,y_i)$, $i = 1\ldots,n_d$. 
+\texttt{init\_lowess} simply calculates normalized $\vet{\bar{x}}$ and
+$\vet{\bar{y}}$:
+\begin{align}
+  x_{min} = \min_i x_i, \\
+  x_{max} = \max_i x_i, \\
+  \bar{x}_{i} = \frac{x_i - x_{min}}{x_{max} - x_{min}},
+\end{align}
+and similarly for $\vet{y}$. For this purpose, it calls the private
+procedure \texttt{normalize\_array} and stores $\vet{\bar{x}}$ and
+$\vet{\bar{y}}$ in the private arrays \texttt{n\_xx} and \texttt{n\_yy}.
+It also stores, for further use, the size \texttt{win} of the data
+window for local estimates (hereafter, $m$), and the degree
+\texttt{deg} of the least-squares regressions in
+\texttt{lowess\_estimate} (hereafter, $n$). All the rest is done by
+the next procedure, \texttt{lowess\_estimate}.
+
+
+\section{\texttt{lowess\_estimate}: estimate $\widehat{y}$ at a point $x$ 
+  using ordinary least squares}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc lowess_estimate' -A2 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+\subsection{Theory}
+
+Based on the ``observational'' data $\vet{x}$ and $\vet{y}$ passed to
+\texttt{init\_lowess}, given an abscissa $x$ (which may or may not be
+equal to one of the data points $x_i$ to be used by lowess), we want
+to obtain a local estimate $\widehat{y}$  ``through'' the data points.
+
+First, $x$ itself is normalized:
+\begin{equation}
+\bar{x} = \frac{x - x_{min}}{x_{max} - x_{min}}.
+\end{equation}
+Now, for all (normalized) data points $\bar{x}_{i}$, calculate the distances to $\bar{x}$:
+\begin{equation}
+d_i = |\bar{x} - \bar{x}_{i}|, \qquad i = 1,\ldots,n_d.
+\end{equation}
+This will be used to calculate the weights of the $m$ nearest points
+to $x$. We need the indices of the $m$ $x_i$\is\ closest to
+$x$. This is done by the private procedure
+\texttt{get\_min\_range}. The indices of the $m$ nearest neighbors are
+found by \texttt{indxquickselect}, from module \texttt{ssr}, and
+returned in the array of \texttk{int}\is\ \texttt{min\_range}
+(hereafter $R$),
+together with the maximum distance among them $d_{max}$ (in variable
+\texttt{maxdist}):
+\begin{equation}
+d_{max} = \max d_{R_i}, \; i = 1,\ldots, m.
+\end{equation}
+This allows the calculation of the weights of each data point
+$x_{R_i}, \; i = 1, \ldots m$:
+\begin{align}
+  w(x) &\equiv (1 - |x|^3)^3, \\
+  w_i &= w(d_{R_i}/d_{max}).
+\end{align}
+
+The $w_i$\is\ will be put in the diagonal of a matrix $\vet{W}$ for
+weighted least squares. The statistical model is
+\begin{equation}
+\widehat{Y} = \beta_0 + \beta_1 \bar{x} + \beta_2 \bar{x}^2 + \ldots +
+\beta_n \bar{x}^n.
+\end{equation}
+
+
+We apply the relevant theory without
+details. Build the matrices $\met{W}_{m\times m}$ and $\met{X}_{m\times n}$: 
+\begin{align}
+  W_{ij} &= \delta_{ij}w_{(i)},\label{eq:diag-W}\\
+  X_{i,0} &= 1, \\
+  X_{i,1} &= \bar{x}_{R_i}\\
+  X_{i,j} &= \bar{x}_{R_i}^j.
+\end{align}
+Note that if $n = 1$, the last line above is not calculated. In
+(\ref{eq:diag-W}), $\delta_{ij}$ is Kronecker's delta.
+The matrix operations in \texttt{smatrix.chpl} involving $\met{W}$,
+therefore, use a 1-dimensional array to store only its diagonal: see
+\texttt{dot\_m\_diagm} and \texttt{dot\_mt\_diagm}.
+The observed
+normalized ordinates are stored in vector $\met{Y}_{m\times 1}$, with
+\begin{equation}
+Y_i = \bar{y}_{R_i}.
+\end{equation}
+
+Now let $\met{A}_{n+1 \times m}$, $\met{B}_{n+1 \times n+1}$
+$\met{C}_{n+1 \times m}$ be matrices, $\met{\beta}_{n+1\times 1}$ be a
+vector, and calculate a standard weighted
+multiple regression:
+\begin{align*}
+  \met{A} &\leftarrow \met{X}^\tr\met{W}, \\
+  \met{B} &\leftarrow \met{A}\met{X},\\
+  \met{B} &\leftarrow \met{B}^{-1}, \\
+  \met{A} &\leftarrow \met{B}\met{X}^\tr, \\
+  \met{C} &\leftarrow \met{A}\met{W}, \\
+  \met{\beta} &\leftarrow \met{C}\met{Y}.
+\end{align*}
+where $\beta_0, \beta_1, \ldots, \beta_n$ are the regression
+parameters. Then,
+\begin{equation}
+\widehat{Y} = \met{\beta}^\tr\met{X}
+\end{equation}
+is the normalized estimate and
+\begin{equation}
+\widehat{y} = y_{\min} + \widehat{Y} \times (y_{\max} - y_{\min})
+\end{equation}
+is the final estimate.
+
+\texttt{lowess\_estimate} makes use of the serial versions of matrix
+operations defined in module \texttt{smatrix}. No attempt is made to
+calculate faster matrix products which are possible, for
+example, using \texttt{gemv} and similar routines from module \texttt{BLAS}.
+
+The main reason for implementing the two lowess procedures serially is
+that now the user is supposed to leverage parallelization by calling
+\texttt{lowess\_estimate} inside a \texttk{forall} loop:
+
+\lstinputlisting[style=lstchapelf, escapechar=\@,
+  caption={An example of lowess in action.},
+  label=lis:exlow]{exlow.chpl}
+
+The result can be seen in figure \ref{fig:exlow}
+
+\begin{figure}\centering
+  \includegraphics[width=0.6\textwidth]{exlow.pdf}
+  \caption{The lowess result from program \texttt{exlow.chpl}.\label{fig:exlow}}
+\end{figure}
+
+
+\clearpage
+
+\section{\texttt{steep}: Steepest descent method for nonlinear least squares}
+
+The description here is quite detailed and long, and may in the future
+be moved to a proper place. It is heavily based on
+\cite{gavin2022levenberg} and code listings in Matlab cited therein.
+
+Consider then a set of $m$ ``observed'' data points $\vet{y} = (y_1, \ldots,
+y_m)$ possibly observed at the independent variable values $\vet{x} = ((x_{11}, \ldots,x_{1l}),\ldots,
+(x_{m1},\ldots,x_{ml}))$.. A model may be proposed to approximate or estimate these
+points, of the type
+\begin{equation}
+  \vet{\hat{y}} = \vet{f}(\vet{x},\vet{p})
+\end{equation}
+where $\vet{p} = (p_1, \ldots, p_n)$ are $n$ parameters that we want
+to find to get $\vet{\hat{y}}$ as ``close'' as possible to $\vet{y}$.
+
+%% An ``squared error'' covariance matrix can be defined as follows:
+%% \begin{equation}
+%% \met{V}_{m\times m} \equiv \left( \mat{\vet{\hat{y}}-\vet{y}}_{m
+%%   \times 1}\mat{\vet{\hat{y}} - \vet{y}}^\tr_{1 \times m}\right)
+%% \end{equation}
+%% A ``weight'' matrix is now the inverse of $\met{V}$:
+%% \begin{equation}
+%% \met{W} \equiv \met{V}^{-1},
+%% \end{equation}
+%% but it is not clear to me if this is the ``right'' way to introduce
+%% $\vet{W}$, since it is a rather roundabout way to define
+The next
+element is the objective function that we wish to maximize,
+namely
+\begin{equation}
+\chi^2(\vet{p}) \equiv \mat{\vet{\hat{y}}-\vet{y}}^{\tr}_{1
+  \times m}\met{W}_{m \times m}\mat{\vet{\hat{y}}-\vet{y}}_{m \times 1}\label{eq:chi2-matrix}
+\end{equation}
+\cite{gavin2022levenberg} mentions that $\met{W}$ is often a diagonal
+matrix (which makes a lot of sense, and is the only case implemented
+in the routine):
+\begin{equation}
+W_{ij} = \frac{\delta_{ij}}{\sigma_{y_{(i)}}^2}.
+\end{equation}
+
+We translate (\ref{eq:chi2-matrix}) to indicial notation:
+\begin{equation}
+\chi^2(p_k) = [\hat{y}_i(p_k) - y_i ]W_{ij}[\hat{y}_j(p_k)-y_j];
+\end{equation}
+then,
+\begin{align}
+  \parder{\chi^2}{p_k} &= [\hat{y}_i(p_k)- y_i]W_{ij}\left[\parder{\hat{y}_j}{p_k}\right] +
+                          \left[\parder{\hat{y}_i}{p_k}\right]W_{ij}[\hat{y}_j(p_k)-y_j] \\
+                       &= [\hat{y}_i(p_k)-y_i]W_{ij}\left[\parder{\hat{y}_j}{p_k}\right] +
+                               [\hat{y}_i(p_k)-y_i] W_{ji}\left[\parder{\hat{y}_j}{p_k}\right]\\
+                               \intertext{which, since $\met{W}$ is symmetric, yields}
+                       &= 2 [\hat{y}_i(p_k)-y_i]W_{ij}\left[\parder{\hat{y}_j}{p_k}\right]                              
+\end{align}
+or
+\begin{equation}
+\met{\vet{\nabla}\chi^2}^\tr_{1\times n} =  2 \mat{ \met{\hat{y}}-\vet{y} }^\tr_{1\times m} \met{W}_{m\times m} \met{J}_{m\times n}
+\end{equation}
+where
+\begin{equation}
+J_{jk} = \parder{\hat{y}_j}{p_k}
+\end{equation}
+are the elements of the jacobian matrix
+\begin{equation}
+  \met{J}_{m \times n} =
+  \begin{bmatrix}
+    \parder{y_1}{p_1} & \parder{y_1}{p_2} & \cdots & \parder{y_1}{p_n} \\
+    \parder{y_2}{p_1} & \parder{y_2}{p_2} & \cdots & \parder{y_2}{p_n} \\
+    \vdots            &                   & \ddots & \vdots \\
+    \parder{y_m}{p_1} & \parder{y_m}{p_2} & \cdots & \parder{y_m}{p_n} \\
+  \end{bmatrix}.
+\end{equation}
+The gradient of $\chi^2$ is
+\begin{equation}
+  \mat{\vet{\nabla}\chi^2}_{n\times 1} = 2\met{J}^\tr_{n\times m}\met{W}_{m\times m} \mat{ \vet{\hat{y}}-\vet{y} }_{m\times 1},
+\end{equation}
+because $\met{W}^\tr = \met{W}$.
+
+We start at an initial guess $\vet{p}$ and systematically calculate
+\begin{align*}
+  \mat{\vet{\nabla}\chi^2} &= 2\met{J}^\tr\met{W} \mat{\vet{\hat{y}}-\vet{y}},\\
+   \mat{\vet{h}} &= t \mat{\vet{\nabla}\chi^2}\\
+   \mat{\vet{p}} &\leftarrow \mat{\vet{p}} - \mat{\vet{h}}
+\end{align*}
+until a stopping criterion is reached such as
+\[
+\left | \vet{h}\right| < \epsilon.
+\]
+Note the minus sign in the update of $\vet{p}$, because we are reaching for a
+minimum of $\chi^2$.  The problem of course lies in what value of $t$ to
+use. In some simple examples, it can be fixed at some small number.
+A better option (we shall see) is \emph{backtracing
+line search}, which consists of changing the algorithm to 
+\begin{align*}
+  \mat{\vet{\nabla}\chi^2} &= 2\met{J}^\tr\met{W} \mat{\vet{\hat{y}}-\vet{y}},\\
+    t &\leftarrow 1\\
+    \text{while} \;\chi^2(\vet{p} - t\vet{\nabla}\chi^2) &> \chi^2(\vet{p}) - \frac{t}{2}\left|\vet{\nabla}\chi^2\right|^2 \;\text{do}
+       \;t \leftarrow \beta t\\
+    \vet{h} &= t \mat{\vet{\nabla}\chi^2} \\
+    \vet{p} &\leftarrow   \vet{p} - \vet{h}
+\end{align*}
+where $\beta=0.1$ (hardwired and constant) is the bactracing parameter, until 
+\[
+\left | \vet{h}\right| < \epsilon.
+\]
+The stop criterion $\epsilon$ has a default value of $1.0\times 10^{-6}$,
+and is chosen by the user by setting the variable \texttt{epsilon}.
+The Jacobian matrix is calculated
+with centered finite
+differences.
+
+After the optimal set of parameters $\vet{p}$ is found, a set of
+scores is returned: the \emph{reduced chi-square}, a standard error of
+estimate, and the coefficient of determination:
+\begin{align}
+  \chi^2_{\nu} &= \frac{\chi^2(\vet{p})}{m-n},\label{eq:redchi2}\\
+  \sigma_{\vet{\hat{y}}} &= \sqrt{\frac{\chi^2(\vet{p})}{\sum_{i=1}^m W_{ii}}},\label{eq:sigyhat}\\
+  r^2 &= 1 - \frac{\sigma^2_{\vet{\hat{y}}}}{\wVar\{\vet{y}\}},\label{eq:rdet}
+\end{align}
+where $\wVar$ is the weighted variance.
+$\chi^2_{\nu} \gg 1$ indicate a poor fit, $\chi^2_{\nu} \approx 1$ indicates
+that the fit error is of the same order as the measurement error, and
+$\chi^2_{\nu} < 1$ indicates over-fitting. When the weights are not available
+($w_i = -1$), the procedure sets $w_i = 1$ internally and 
+$\chi^2_{\nu} \equiv 1$ \citep{gavin2022levenberg}.
+
+The parameter covariance matrix is
+\begin{equation}
+\mat{\vet{V}_p} = \left[\met{J}^\tr\met{W}\met{J}\right]^{-1}
+\end{equation}
+and the asymptotic standard parameter error vector is
+\begin{equation}
+\mat{\vet{\sigma}_p} = \sqrt{\diag\left(\mat{\vet{V}_p}\right)}
+\end{equation}
+\citep{gavin2022levenberg}.
+
+
+
+\section{\texttt{gnewton}: Gauss-Newton method for nonlinear least squares}
+
+Two consecutive estimates of $\vet{\hat{y}}$ are related (to first order) by
+\begin{equation}
+  \met{\hat{y}(\vet{p} - \vet{h})}_{m\times 1} =
+  \met{\hat{y}(\vet{p})}_{m\times 1} - \met{J}_{m\times n}\met{h}_{n\times 1}.
+\end{equation}
+
+Consider two consecutive evaluations of $\chi^2(\vet{p})$:
+\begin{align}
+  \chi^2(\vet{p}) &= \Big[\met{\hat{y}(\vet{p})} - \met{y}\Big]^\tr\met{W}
+                    \Big[\met{\hat{y}(\vet{p})} - \met{y}\Big], \\
+                    \chi^2(\vet{p}-\vet{h}) &=
+                    \Big[\met{\hat{y}(\vet{p})} - \met{J}\met{h} - \met{y}\Big]^\tr\met{W}
+                    \Big[\met{\hat{y}(\vet{p})} - \met{J}\met{h} - \met{y}\Big].
+\end{align}
+As always, indicial notation is quicker and more clear:
+\begin{align}
+  \hat{y}_i(p_l-h_l) &= \hat{y}_i(p_l) - J_{ik}h_k,\\
+  \chi^2(p_l) &= \left[ \hat{y}_i(p_l) - y_i\right]W_{ij}\left[ \hat{y}_j(p_l) - y_j\right],\\
+  \chi^2(p_l-h_l) &= \left[ \hat{y}_i(p_l) - J_{ik}h_k - y_i\right]W_{ij}\left[ \hat{y}_j(p_l) -J_{ik}h_k - y_j\right].\label{eq:chi2-lin}
+\end{align}
+Differentiating  (\ref{eq:chi2-lin}) with respect to $h_k$,
+\begin{align}
+  \parder{\chi^2}{h_k} &= \left[ \hat{y}_i(p_l) - J_{ik}h_k - y_i\right]W_{ij}\left[ -J_{ik}\right]+
+  \left[ - J_{ik}\right]W_{ij}\left[ \hat{y}_j(p_l) -J_{ik}h_k - y_j\right]\nonumber\\
+  &= \left[ \hat{y}_i(p_l) - J_{ik}h_k - y_i\right]W_{ij}\left[ -J_{ik}\right]+
+  \left[ - J_{jk}\right]W_{ji}\left[ \hat{y}_i(p_l) -J_{jk}h_k - y_i\right]\nonumber\\
+  &= -2\left[ \hat{y}_i(p_l) - J_{ik}h_k - y_i\right]W_{ij}J_{ik}
+\end{align}
+which translates in matrix form to
+\begin{equation}
+  \Bigmat{\parder{\chi^2}{h_k}}_{1\times n} =
+  -2 \Big[\mat{\hat{y}(\vet{p})}_{m\times 1} - \met{J}_{m\times n}\met{h}_{n\times 1} - \met{y}_{m\times 1}\Big]^\tr_{1\times m}
+  \met{W}_{m\times m}\met{J}_{m \times n}.
+\end{equation}
+But
+\begin{equation}
+\vet{\nabla}_h\chi^2 = \parder{\chi^2}{h_k}\vet{e}_k,
+\end{equation}
+whence
+\begin{equation}
+  \Bigmat{\vet{\nabla}_h\chi^2} =
+  -2 \met{J}^\tr \met{W}
+  \Big[\mat{\hat{y}(\vet{p})} - \met{J}\met{h} - \met{y}\Big]
+\end{equation}
+At an extremum, $\vet{\nabla}_h\chi^2 = \boldn{0}$, so that
+\begin{align}
+  -2 \met{J}^\tr \met{W}
+  \Big[\mat{\hat{y}(\vet{p})} - \met{J}\met{h} - \met{y}\Big] &= \mat{\boldn{0}},\nonumber\\
+  \met{J}^\tr \met{W}\met{J}\met{h} -
+  \met{J}^\tr \met{W}\Big[\mat{\vet{\hat{y}}(\vet{p})} - \met{y}\Big] &= \mat{\boldn{0}}\nonumber\\
+    \met{J}^\tr \met{W}\met{J}\met{h} &= 
+  \met{J}^\tr \met{W}\Big[\mat{\vet{\hat{y}}(\vet{p})} - \met{y}\Big].\label{eq:newton-h}
+\end{align}
+The Newton method now consists of starting at some value of $\vet{p}$,
+iterating the solution $\vet{h}$ of (\ref{eq:newton-h}), and setting
+\[
+\met{p} \leftarrow \met{p} - \met{h}
+\]
+until, again, 
+\[
+\left | \vet{h}\right| < \epsilon.
+\]
+
+\section{\texttt{levmar}: Levenberg-Marquardt}
+
+The Levenberg-Marquardt algorithm is a combination of the steppest
+descent and Newton methods. First, note that the update
+$\mat{\vet{h}}$ of the steepest descent method can be written in the
+form
+\begin{align}
+  \mat{\vet{h}} &= 2t\met{J}^\tr\met{W} \mat{ \vet{\hat{y}}-\vet{y}
+  },\nonumber\\
+  \lambda \mat{\vet{h}} &= \met{J}^\tr\met{W} \mat{ \vet{\hat{y}}-\vet{y}}
+\end{align}
+with $\lambda = 1/(2t)$, while the update $\mat{\vet{h}}$ of the
+Newton method is given by (\ref{eq:newton-h}). Combining both, we
+first have
+\begin{equation}
+\Big[\met{J}^\tr \met{W}\met{J} + \lambda \met{I}\Big]\met{h} = 
+\met{J}^\tr \met{W}\Big[\mat{\vet{\hat{y}}(\vet{p})} - \met{y}\Big],
+\end{equation}
+where $\met{I}$ is the identity matrix. This was further modified by
+\cite{marquardt--algotithm} and \cite{fletcher1971modified} by setting
+\begin{equation}
+D_{ij} = J_{ki}W_{kl}J_{lj}\delta_{(ij)}
+\end{equation}
+--- that is, $\met{D}$ is a diagonal matrix formed from the diagonal
+elemens of    $\met{J}^\tr \met{W}\met{J}$ .  In our implementation,
+$\lambda = 1$ as a starting value. We now solve for the
+update $\met{h}$ and calculate $\rho$ in each iteration as 
+\begin{align}
+\Big[\met{J}^\tr \met{W}\met{J} + \lambda \met{D}\Big]\met{h} &= 
+\met{J}^\tr \met{W}\Big[\mat{\vet{\hat{y}}(\vet{p})} - \met{y}\Big],
+\\
+\rho &= \frac{\chi^2(\vet{p}) - \chi^2(\vet{p}-\vet{h})}
+{ \left| \met{h}^\tr \lambda \met{D}\met{h} + \met{J}^\tr \met{W}\Big[\mat{\vet{\hat{y}}(\vet{p})} - \met{y}\Big]\right|}
+\end{align}
+Now if $\rho > \epsilon_r = 1\times 10^{-3}$, then
+\begin{align*}
+  \met{p} &\leftarrow \met{p} - \met{h}, \\
+  \lambda &\leftarrow \lambda/\beta{\mathord{\downarrow}}
+\end{align*}
+otherwise,
+\begin{equation*}
+\lambda \leftarrow \beta{\mathord{\uparrow}} \lambda
+\end{equation*}
+where $\beta{\mathord{\downarrow}} = 5$ and
+$\beta{\mathord{\uparrow}} = 2$ implement the \emph{delayed
+gratification approach}. Note that $\beta$ is reminiscent of, but not
+the same as, the backtracing parameter $t$ of the steepest descent
+method.
+
+
+
+
+
+
+
+\bibliography{abbrevs,all}
+\bibliographystyle{apalike}
+\end{document}
+
+

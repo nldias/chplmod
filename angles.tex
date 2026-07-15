@@ -1,0 +1,91 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper,top=3cm,right=2cm,left=2cm,bottom=2.5cm]{geometry}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext}
+\usepackage[ttscale=0.875]{libertine}
+\input{math.tex}
+\usepackage[libertine,cmintegrals,cmbraces]{newtxmath}
+\usepackage[round]{natbib}
+\usepackage[american]{babel}
+\usepackage[small]{titlesec}
+\usepackage{amsmath}
+\usepackage{listings}
+%% \usepackage{subscript}
+%% \usepackage{enumerate}
+%% \usepackage{booktabs}
+%% \usepackage{tabu}
+%% \usepackage{setspace}
+%% \usepackage{comment}
+\usepackage[defaultlines=4,all]{nowidow}
+\usepackage{needspace}
+\usepackage{graphicx}
+\usepackage{mathrsfs}
+\usepackage{ifpdf}
+\usepackage{upgreek}
+\usepackage[pdftex,colorlinks=true,%
+   urlcolor=blue,
+   linkcolor=blue,
+   citecolor=blue,
+   filecolor=blue]{hyperref}
+\input{mylistings.tex}
+\input{ira.tex}
+\renewcommand{\ttdefault}{lmtt}% default cmtt
+\newcommand{\texttk}[1]{\texttt{\bfseries #1}}
+
+
+
+\title{Documentation for \texttt{angles.chpl}}
+
+\author{Nelson Luís Dias (\texttt{nelsonluisdias@gmail.com})}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{\texttt{todec}: convert from degrees, minutes and seconds to
+  decimal degrees}
+
+\subsection{Use}
+
+\begin{lstlisting}[style=lstchapelf,numbers=none]
+proc todec(
+   in xmsc: real(?w)
+): real(w) {
+\end{lstlisting}
+
+Here \texttt{xmsc} is a real variable or value in the form \texttt{gggg.mmss}
+where the \texttt{gggg} are the degrees, \texttt{mm} are the minutes and \texttt{ss} the
+seconds. For example, \texttt{121.3740} means
+\latminsec{121}{37}{40}{}. \texttt{todec} returns a real value in
+\emph{decimal} degrees in the form \texttt{gggg.xxxx}. In the case
+above, \texttt{todec(121.3740)} returns 121.6278.
+
+
+\section{\texttt{rad2dec}: convert radians to decimal degrees}
+
+\subsection{Use}
+
+\begin{lstlisting}[style=lstchapelf,numbers=none]
+inline proc rad2dec(const in r: real(?w)): real(w) {
+\end{lstlisting}
+
+\section{\texttt{dec2rad}: convert decimal degrees to radians}
+
+\subsection{Use}
+
+\begin{lstlisting}[style=lstchapelf,numbers=none]
+inline proc rad2dec(const in r: real(?w)): real(w) {
+\end{lstlisting}
+
+
+
+
+
+\bibliography{abbrevs,all}
+\bibliographystyle{apalike}
+\end{document}
+
+

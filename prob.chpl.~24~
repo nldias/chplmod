@@ -1,0 +1,391 @@
+use Math only exp, lnGamma, log;
+use Random only fillRandom, randomStream;
+use dgrow;
+proc Normal(const in P: real): real {
+// -----------------------------------------------------------------------------
+// --> Normal: inverse of N(0,1) CDF
+//    
+// MICHAEL J. WICHURA ALGORITHM AS241 APPL. STATIST. (1988) VOL. 37(3) 477-484
+//
+// PRODUCES THE NORMALDEVIATE Z CORRESPONDING TO A GIVEN LOWER TAIL AREA OF P; Z
+// IS ACCURATE TO ABOUT 1 PART IN 10**16.
+//
+// THE HASH SUMS BELOW ARE THE SUMS OF THE MANTISSAS OF THE COEFFICIENTS. THEY
+// ARE INCLUDED FOR USE IN CHECKING TRANSCRIPTION.
+// -----------------------------------------------------------------------------
+param
+   ZERO = 0.0E0,
+   ONE = 1.0E0,
+   HALF = ONE/2.0E0, 
+   SPLIT1 = 0.425E0,
+   SPLIT2 = 5.0E0,
+   CONST1 = 0.180625E0,
+   CONST2 = 1.6E0;
+// -----------------------------------------------------------------------------
+// COEFFICIENTS FOR P CLOSE TO 1/2
+// -----------------------------------------------------------------------------
+param
+   A0 = 3.38713_28727_96366_6080E0, 
+   Al = 1.33141_66789_17843_7745E2,
+   A2 = 1.97159_09503_06551_4427E3,
+   A3 = 1.37316_93765_50946_1125E4, 
+   A4 = 4.59219_53931_54987_1457E4, 
+   A5 = 6.72657_70927_00870_0853E4, 
+   A6 = 3.34305_75583_58812_8105E4, 
+   A7 = 2.50908_09287_30122_6727E3, 
+   B1 = 4.23133_30701_60091_1252E1, 
+   B2 = 6.87187_00749_20579_0830E2, 
+   B3 = 5.39419_60214_24751_1077E3, 
+   B4 = 2.12137_94301_58659_5867E4, 
+   B5 = 3.93078_95800_09271_0610E4, 
+   B6 = 2.87290_85735_72194_2674E4, 
+   B7 = 5.22649_52788_52854_5610E3;
+// -----------------------------------------------------------------------------
+// HASH SUM AB    55.88319 28806 14901 4439 
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// COEFFICIENTS FOR P NEITHER CLOSE TO 1/2 NOR 0 OR 1
+// -----------------------------------------------------------------------------
+param
+   C0 = 1.42343_71107_49683_57734E0,
+   Cl = 4.63033_78461_56545_29590E0, 
+   C2 = 5.76949_72214_60691_40550E0,
+   C3 = 3.64784_83247_63204_60504E0,
+   C4 = 1.27045_82524_52368_38258E0, 
+   C5 = 2.41780_72517_74506_11770E-1, 
+   C6 = 2.27238_44989_26918_45833E-2, 
+   C7 = 7.74545_01427_83414_07640E-4, 
+   D1 = 2.05319_16266_37758_82187E0, 
+   D2 = 1.67638_48301_83803_84940E0, 
+   D3 = 6.89767_33498_51000_04550E-1, 
+   D4 = 1.48103_97642_74800_74590E-1, 
+   D5 = 1.51986_66563_61645_71966E-2, 
+   D6 = 5.47593_80849_95344_94600E-4, 
+   D7 = 1.05075_00716_44416_84324E-9;
+// -----------------------------------------------------------------------------
+// HASH SUM CD        49.33206 50330 16102 89036 
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// COEFFICIENTS FOR P NEAR 0 OR 1 
+// -----------------------------------------------------------------------------
+param
+   E0 = 6.65790_46435_01103_77720E0,
+   El = 5.46378_49111_64114_36990E0,
+   E2 = 1.78482_65399_17291_33580E0,
+   E3 = 2.96560_57182_85048_91230E-1, 
+   E4 = 2.65321_89526_57612_30930E-2, 
+   E5 = 1.24266_09473_88078_43860E-3, 
+   E6 = 2.71155_55687_43487_57815E-5, 
+   E7 = 2.01033_43992_92288_13265E-7, 
+   Fl = 5.99832_20655_58879_37690E-1, 
+   F2 = 1.36929_88092_27358_05310E-1,
+   F3 = 1.48753_61290_85061_48525E-2,
+   F4 = 7.86869_13114_56132_59100E-4, 
+   F5 = 1.84631_83175_10054_68180E-5, 
+   F6 = 1.42151_17583_16445_88870E-7, 
+   F7 = 2.04426_31033_89939_78564E-15;
+// -----------------------------------------------------------------------------
+// HASH SUM EF  47.52583 31754 92896 71629 
+// -----------------------------------------------------------------------------
+   var Q,R,res: real;
+   Q = P - HALF;
+   if (abs(Q) <= SPLIT1) then {
+      R = CONST1 - Q * Q;
+      res = Q *
+      (((((((A7*R + A6)*R + A5)*R + A4)*R + A3)*R + A2)*R + Al)*R + A0) /
+      (((((((B7*R + B6)*R + B5)*R + B4)*R + B3)*R + B2)*R + B1)*R + ONE);
+      return res;
+   }
+   else if (Q <= 0.0) then {
+      R = P;
+   }
+   else {
+      R = ONE - P;
+   }
+   if ( R <= 0.0) then {
+      halt("prob-->ppnd: P < 0.0 or P > 1.0");
+   }
+   R = sqrt(-log(R));
+   if ( R <= SPLIT2) then {
+      R = R - CONST2;
+      res = (((((((C7*R + C6)*R + C5)*R + C4)*R + C3)*R + C2)*R + Cl)*R + C0) /
+            (((((((D7*R + D6)*R + D5)*R + D4)*R + D3)*R + D2)*R + D1)*R + ONE);
+   }
+   else { 
+      R = R - SPLIT2;
+      res = (((((((E7*R + E6)*R + E5)*R + E4)*R + E3)*R + E2)*R + El)*R + E0) /
+            (((((((F7*R + F6)*R + F5)*R + F4)*R + F3)*R + F2)*R + Fl)*R + ONE);
+   }
+   if ( Q <= 0.0) then {
+      res = -res;
+   }
+   return res;
+}
+// -----------------------------------------------------------------------------
+// --> fillNormal: fills array x with N(0,1) random variables
+// -----------------------------------------------------------------------------
+proc fillNormal(ref x: [] real) where x.rank == 1 {
+   const n = x.size;
+   var u: [1..n] real;
+   fillRandom(u);
+   forall (anx, anu) in zip(x,u) do {
+      anx = Normal(anu);
+   }
+}
+
+// -----------------------------------------------------------------------------
+// All the Poisson-related code is translated from the C code in Numpy
+// directly. 
+//
+// Copyright (c) 2005-2025, NumPy Developers.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+//        notice, this list of conditions and the following disclaimer.
+//
+//     * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided
+//        with the distribution.
+//
+//     * Neither the name of the NumPy Developers nor the names of any
+//        contributors may be used to endorse or promote products derived
+//        from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// In order to use Chapel's Random module, we need to create and start a
+// randomStream.
+// -----------------------------------------------------------------------------
+
+
+// -----------------------------------------------------------------------------
+// --> Poisson: generates a random variable with Poisson distribution, parameter
+// lam. 
+// -----------------------------------------------------------------------------
+proc Poisson(
+   const in lam: real
+   ): int {
+   if (lam >= 10.0) {
+      // For large lambda, use Hörmann's Transformed Rejection Method
+      return Poisson_ptrs(lam);
+   } else if (lam == 0.0) {
+      return 0;
+   } else {
+      // For small lambda, use the sequential multiplication method
+      return Poisson_mult(lam);
+   }
+}
+
+// -----------------------------------------------------------------------------
+// --> Poisson_mult: for 0 < lam < 10.0.
+// -----------------------------------------------------------------------------
+proc Poisson_mult(
+   const in lam: real
+   ): int {
+   const enlam = exp(-lam);
+   var X: int ;
+   var prod, U: real;
+   var UPoissonStream = new randomStream(real);
+   X = 0;
+   prod = 1.0;
+   while (true) {
+      U = UPoissonStream.next(); // Generates a uniform random float in [0, 1)
+      prod *= U;
+      if (prod <= enlam) {
+         return X;
+      }
+      X += 1; // X++;
+   }
+   return -1;       // this should never happen
+}
+
+// -----------------------------------------------------------------------------
+// --> Poisson_ptrs: for lam >= 10.0.
+// -----------------------------------------------------------------------------
+proc Poisson_ptrs(
+   const in lam: real
+   ): int {
+   const slam = sqrt(lam);
+   const loglam = log(lam);
+   const b = 0.931 + 2.53 * slam;
+   const a = -0.059 + 0.02483 * b;
+   const invalpha = 1.1239 + 1.1328 / (b - 3.4);
+   const vr = 0.9277 - 0.62241 / slam;
+   var k: int;
+   var UPoissonStream = new randomStream(real);
+   while (true) {
+      var U = UPoissonStream.next() - 0.5;
+      var V = UPoissonStream.next(); 
+      var u = 0.5 - abs(U);
+      if ((U < 0.0) && (u < 0.0)) then {
+         continue;
+      }
+      var us = 0.5 - U * U / u;
+      k = floor((2.0 * a / u + b) * U + lam + 0.43): int;
+      // Immediate acceptance via the "squeeze" boundary conditions
+      if ((us >= 0.0) && (V <= vr)) {
+         return k;
+      }
+      if ((k < 0) || ((us < 0.0) && (V >= us))) then {
+         continue;
+      }
+      // Mathematical acceptance step (safeguard log evaluation)
+      if (log(V * invalpha / (a / (u * u) + b)) <= k * loglam - lam - lnGamma(k+1)) {
+         return k;
+      }
+   }
+   return -1;       // this should never happen
+}
+
+// -----------------------------------------------------------------------------
+// --> fillPoisson:  fills array x with Poisson(lam) random variables
+// -----------------------------------------------------------------------------
+proc fillPoisson(
+   const in lam: real,
+   ref x: [] int
+   ) where x.rank == 1 {
+   const n = x.size;
+   forall anx in x  do {
+      anx = Poisson(lam);
+   }
+}
+// -----------------------------------------------------------------------------
+// --> lognormalPar: estimate sigma, theta and a from method of moments with
+// sample mean mx, sample var varx, sample skewness gx. Notation from
+//
+// Crooks, G. E. Field Guide to Continuous Probability Distributions
+// self-published, 2017, url = {http://threeplusone.com/fieldguide}.
+//
+// 2026-06-16T11:15:53 fixing an error in the calculation of eta. Now
+// it should be correct.
+// -----------------------------------------------------------------------------
+proc lognormalPar(
+   const in mx: real,
+   const in varx: real,
+   const in gx: real
+   ): (real,real,real) {
+   // const me = exp(1.0);
+   var eta: real; //  = me;
+   // var gx  = (eta+2.0)*sqrt(eta-1.0);
+   // writeln("gx = ",gx);
+   const h = 4 + gx**2;
+   const Delta = (sqrt(h*(h-4.0)) + h - 2.0);
+   // writeln("Delta = ",Delta);
+   var num = Delta**(2.0/3.0) - 2.0**(1.0/3.0)*Delta**(1.0/3.0) + 2.0**(2.0/3.0);
+   // writeln("num = ",num);
+   var den = 2.0**(1.0/3.0) * Delta**(1.0/3.0);
+   // writeln("den = ",den);
+   eta = num/den;
+   var hatg: real;
+   if isClose(eta-1,0.0,absTol=1.0e-10) then {
+      hatg = 0.0;
+   }
+   else {
+      hatg = (eta+2.0)*sqrt(eta-1.0);
+   }
+   // writeln("eta = ",eta," gx = ",gx," hat{g} = ",hatg);
+   const sigma = sqrt(log(eta));
+   // writeln("sigma = ",sigma);
+   const theta = sqrt( varx/((eta-1)*eta)) ;
+   const a = mx - theta*sqrt(eta) ;
+   return (sigma,theta,a);
+}
+
+// -----------------------------------------------------------------------------
+// --> NeymanScott: generates a simple Neyman-Scott process in a
+// square (2L)×(2L). The lower left corner of the region is (-L,-L)
+// and the upper right corner is (+L,+L).
+// -----------------------------------------------------------------------------
+proc NeymanScott(
+   const in L: real,          // 1/2 size of the square (from -L to +L)
+   const in kappa: real,      // parent intensity
+   const in nu: real,         // mean number of offspring per parent
+   const in delpx: real,      // cluster spread
+   out npts: int              // total number of points generated
+   )
+   : ([1..npts] real, [1..npts] real)   // (x,y) of generated points
+{
+   const area = 4.0*L**2;        // area of the square
+   // --------------------------------------------------------------------------
+   // Simulate Parents (Poisson process)
+   // --------------------------------------------------------------------------
+   var n_parents = Poisson(kappa * area);
+   var
+      parent_x,               // abscissa of each parent cluster
+      parent_y:               // ordinate of each parent cluster
+      [1..n_parents] real;
+   // --------------------------------------------------------------------------
+   // Sample between 0 and 1
+   // --------------------------------------------------------------------------
+   fillRandom(parent_x);
+   fillRandom(parent_y);
+   // --------------------------------------------------------------------------
+   // Rescale between -L and +L
+   // --------------------------------------------------------------------------
+   parent_x = 2*L*parent_x - L;
+   parent_y = 2*L*parent_y - L;
+   // --------------------------------------------------------------------------
+   // Simulate offspring.
+   // --------------------------------------------------------------------------
+   var Dout = {1..10};
+   var xout, yout: [Dout] real ;
+   npts = 0;
+   for k in 1..n_parents do {
+      var n_daughters = Poisson(nu);    //  draw number of offspring
+      // -----------------------------------------------------------------------
+      // If there are no daughters, continue.
+      // -----------------------------------------------------------------------
+      if n_daughters == 0 then continue;
+      // -----------------------------------------------------------------------
+      // Displace around parent (Gaussian distribution)
+      // -----------------------------------------------------------------------
+      var
+         dx,
+         dy
+         : [1..n_daughters] real;
+      // -----------------------------------------------------------------------
+      // Draw displacements (dx,dy) ~ N(0,delpx) from parents.
+      // -----------------------------------------------------------------------
+      fillNormal(dx); 
+      fillNormal(dy); 
+      dx *= delpx;
+      dy *= delpx;
+      // -----------------------------------------------------------------------
+      // Displace daughters.
+      // -----------------------------------------------------------------------
+      var daughter_x = parent_x[k] + dx;
+      var daughter_y = parent_y[k] + dy;
+      // -----------------------------------------------------------------------
+      // Add kids in this cluster to all sampled points.
+      // -----------------------------------------------------------------------
+      for l in 1..n_daughters do {
+         var xx = daughter_x[l];
+         var yy = daughter_y[l];
+         // if (xx < -L || xx >= L || yy < -L || yy >= L ) then continue;
+         npts += 1;
+         dgrow(npts,Dout);
+         xout[npts] = xx;
+         yout[npts] = yy;
+      }
+   }
+   Dout = {1..npts};
+   return (xout,yout);
+}
+

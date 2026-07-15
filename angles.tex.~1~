@@ -1,0 +1,392 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper,top=3cm,right=2cm,left=2cm,bottom=2.5cm]{geometry}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext}
+\usepackage[ttscale=0.875]{libertine}
+\input{math.tex}
+\usepackage[libertine,cmintegrals,cmbraces]{newtxmath}
+\usepackage[round]{natbib}
+\usepackage[american]{babel}
+\usepackage[small]{titlesec}
+\usepackage{amsmath}
+\usepackage{listings}
+%% \usepackage{subscript}
+%% \usepackage{enumerate}
+%% \usepackage{booktabs}
+%% \usepackage{tabu}
+%% \usepackage{setspace}
+%% \usepackage{comment}
+\usepackage[defaultlines=4,all]{nowidow}
+\usepackage{needspace}
+\usepackage{graphicx}
+\usepackage{mathrsfs}
+\usepackage{ifpdf}
+\usepackage{upgreek}
+\usepackage[pdftex,colorlinks=true,%
+   urlcolor=blue,
+   linkcolor=blue,
+   citecolor=blue,
+   filecolor=blue]{hyperref}
+\input{mylistings.tex}
+\input{ira.tex}
+\renewcommand{\ttdefault}{lmtt}% default cmtt
+\newcommand{\texttk}[1]{\texttt{\bfseries #1}}
+
+
+
+\title{Documentation for \texttt{nstat.chpl}}
+
+\author{Nelson Luís Dias (\texttt{nelsonluisdias@gmail.com})}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{\texttt{gmean}: geometric mean}
+
+\subsection{Use}
+
+\begin{lstlisting}[style=lstchapelf,numbers=none]
+proc gmean(
+   ref x: [] real                  // the array being averaged
+) : real where x.rank == 1 {
+\end{lstlisting}
+
+
+\subsection{Theory}
+
+Given a sequence $(x_1, x_2, \ldots, x_n)$ of \emph{strictly positive
+  real numbers}, the geometric mean is
+\begin{align}
+  \tilde{x} &= \left[\prod_{i=1}^n x_i \right]^{1/n}\label{eq:gmean-prod}
+\end{align}
+For large $n$ and small individual values of $x_i$, however,
+(\ref{eq:gmean-prod}) can lead to underflow. It is much more robust to
+write
+\begin{align}
+  \tilde{x} &= \exp\left\{ \ln \left[ \left(\prod_{i=1}^n x_i
+      \right)^{1/n}\right]\right\}\nonumber \\
+    &= \exp\left[\frac{1}{n} \sum_{i=1}^n \ln(x_i)\right].\label{eq:gmean-explog}
+\end{align}
+
+\section{\texttt{gmom}: geometric-modulus mean}
+
+\subsection{Use}
+
+\begin{lstlisting}[style=lstchapelf,numbers=none]
+proc gmom(
+   ref x: [] real                  // the array being averaged
+) : real where x.rank == 1 {
+\end{lstlisting}
+
+
+\subsection{Theory}
+
+\texttt{gmom} is my own humble attempt to generalize the idea of a
+geometric mean to sequences containing negative and null values, as well as
+positive.
+
+First, consider a sequence $(x_1, x_2, \ldots, x_n)$ containing only
+negative values. It is reasonable to define its ``geometric'' mean as
+\begin{align}
+  \tilde{x} &= -\exp\left[\frac{1}{n} \sum_{i=1}^n \ln(\left|x_i\right|)\right].\label{eq:gmean-neg}
+\end{align}
+For a sequence containing negative, null, and positive values,
+$\ln(\cdot)$ can no longer be used, and the singularity at the origin
+needs to be avoided. A function that has those attributes and is
+asymptotically equal to $\ln(\cdot)$ for large positive values of its
+argument is the \emph{log-modulus} function introduced by
+\cite{john1980alternative}:
+\begin{equation}
+\logmod(x) \equiv \sign(x)\ln(|x| + 1).\label{eq:def-logmod}
+\end{equation}
+Note that, asymptotically,
+\begin{equation}
+  \logmod(x) \sim \begin{cases}
+    x, & x \sim 0, \\
+    \sign(x)\ln(|x|), & x \gg 1,
+  \end{cases}
+\end{equation}
+and that $\logmod(x)$ is odd.
+
+In order to mimic (\ref{eq:gmean-explog}), we need the inverse of $\logmod$:
+\begin{align*}
+  y &= \sign(x)\ln(|x| + 1),  \\
+  \sign(y)y &= \ln(|x| + 1),  \\
+  \intertext{(because $L$ is odd)}
+  \exp\left(\sign(y)y\right) &= |x| + 1, \\
+  \exp\left(|y|\right) &= |x| + 1, \\
+  |x| &= \exp\left(|y|\right) - 1, \\
+  x &= \sign(y)\left[ \exp\left(|y|\right) - 1\right],
+\end{align*}
+whence
+\begin{equation}
+\expmod(x) \equiv \sign(x)\left[ \exp\left(|x|\right) - 1\right]\label{eq:def-expmod}
+\end{equation}
+is the \emph{exponential-modulus} function.
+
+We are now ready to define the \emph{geometric-modulus} mean:
+\begin{equation}
+\tilde{x} \equiv \expmod\left[ \frac{1}{n}\sum_{i=1}^n
+  \logmod(x_i)\right].
+\label{eq:def-gmom}
+\end{equation}
+Evidently, for a sequence of positive real values where $x_i \gg 1\;
+\forall i = 1, \ldots, n$, (\ref{eq:def-gmom}) will produce results
+which are very close to (\ref{eq:gmean-explog}). However, if on the
+other hand $x_i \ll 1\; \forall i = 1, \ldots, n$, (\ref{eq:def-gmom})
+will be very much like the arithmetic mean, which is undesirable. The
+solution to always obtain a ``geometric mean''-like behavior for any
+sequence (now including possibly null and negative values as well) is
+to re-scale before averaging, by means of the following sequence of
+operations:
+\begin{align}
+  \delta &= \frac{\min(|x_i|)}{16}, \qquad x_i \ne 0, \label{eq:delta}\\
+  \xi_i &= \frac{x_i}{\delta}, \label{eq:xi}\\
+  \tilde{\xi} &= \expmod\left[ \frac{1}{n}\sum_{i=1}^n
+    \logmod(\xi_i)\right], \label{eq:tilde-xi}\\
+  \tilde{x} &= \delta \tilde{\xi}.\label{eq:tilde-x}
+\end{align}
+The factor 16 in (\ref{eq:delta}) is arbitrary and is meant to force
+all non-null $\xi$ to be ``sufficiently'' far from $\pm 1$.
+
+
+\section{\texttt{steep}: Steepest descent method for nonlinear least squares}
+
+The description here is quite detailed and long, and may in the future
+be moved to a proper place. It is heavily based on
+\cite{gavin2022levenberg} and code listings in Matlab cited therein.
+
+Consider then a set of $m$ ``observed'' data points $\vet{y} = (y_1, \ldots,
+y_m)$ possibly observed at the independent variable values $\vet{x} = (x_1, \ldots,
+x_m)$.. A model may be proposed to approximate or estimate these
+points, of the type
+\begin{equation}
+  \vet{\hat{y}} = \vet{f}(\vet{x},\vet{p})
+\end{equation}
+where $\vet{p} = (p_1, \ldots, p_n)$ are $n$ parameters that we want
+to find to get $\vet{\hat{y}}$ as ``close'' as possible to $\vet{y}$.
+
+An ``squared error'' covariance matrix can be defined as follows:
+\begin{equation}
+\met{V}_{m\times m} \equiv \left( \mat{\vet{\hat{y}}-\vet{y}}_{m
+  \times 1}\mat{\vet{\hat{y}} - \vet{y}}^\tr_{1 \times m}\right)
+\end{equation}
+A ``weight'' matrix is now the inverse of $\met{V}$:
+\begin{equation}
+\met{W} \equiv \met{V}^{-1},
+\end{equation}
+but it is not clear to me if this is the ``right'' way to introduce
+$\vet{W}$, since it is a rather roundabout way to define the next
+element, which is the objective function that we wish to maximize,
+namely
+\begin{equation}
+\chi^2(\vet{p}) \equiv \mat{\vet{\hat{y}}-\vet{y}}^{\tr}_{1
+  \times m}\met{W}_{m \times m}\mat{\vet{\hat{y}}-\vet{y}}_{m \times 1}\label{eq:chi2-matrix}
+\end{equation}
+\cite{gavin2022levenberg} mentions that $\met{W}$ is often a diagonal
+matrix (which makes a lot of sense, and may the only case implemented
+in the routine; let's see):
+\begin{equation}
+W_{ij} = \frac{\delta_{ij}}{\sigma_{y_{(i)}}^2}.
+\end{equation}
+
+We translate (\ref{eq:chi2-matrix}) to indicial notation:
+\begin{equation}
+\chi^2(p_k) = [\hat{y}_i(p_k) - y_i ]W_{ij}[\hat{y}_j(p_k)-y_j];
+\end{equation}
+then,
+\begin{align}
+  \parder{\chi^2}{p_k} &= [\hat{y}_i(p_k)- y_i]W_{ij}\left[\parder{\hat{y}_j}{p_k}\right] +
+                          \left[\parder{\hat{y}_i}{p_k}\right]W_{ij}[\hat{y}_j(p_k)-y_j] \\
+                       &= [\hat{y}_i(p_k)-y_i]W_{ij}\left[\parder{\hat{y}_j}{p_k}\right] +
+                               [\hat{y}_i(p_k)-y_i] W_{ji}\left[\parder{\hat{y}_j}{p_k}\right]\\
+                               \intertext{which, since $\met{W}$ is symmetric, yields}
+                       &= 2 [\hat{y}_i(p_k)-y_i]W_{ij}\left[\parder{\hat{y}_j}{p_k}\right]                              
+\end{align}
+or
+\begin{equation}
+\met{\vet{\nabla}\chi^2}^\tr_{1\times n} =  2 \mat{ \met{\hat{y}}-\vet{y} }^\tr_{1\times m} \met{W}_{m\times m} \met{J}_{m\times n}
+\end{equation}
+where
+\begin{equation}
+J_{jk} = \parder{\hat{y}_j}{p_k}
+\end{equation}
+are the elements of the jacobian matrix
+\begin{equation}
+  \met{J}_{m \times n} =
+  \begin{bmatrix}
+    \parder{y_1}{p_1} & \parder{y_1}{p_2} & \cdots & \parder{y_1}{p_n} \\
+    \parder{y_2}{p_1} & \parder{y_2}{p_2} & \cdots & \parder{y_2}{p_n} \\
+    \vdots            &                   & \ddots & \vdots \\
+    \parder{y_m}{p_1} & \parder{y_m}{p_2} & \cdots & \parder{y_m}{p_n} \\
+  \end{bmatrix}.
+\end{equation}
+The gradient of $\chi^2$ is
+\begin{equation}
+  \mat{\vet{\nabla}\chi^2}_{n\times 1} = 2\met{J}^\tr_{n\times m}\met{W}_{m\times m} \mat{ \vet{\hat{y}}-\vet{y} }_{m\times 1},
+\end{equation}
+because $\met{W}^\tr = \met{W}$.
+
+We start at an initial guess $\vet{p}$ and systematically calculate
+\begin{align*}
+  \mat{\vet{\nabla}\chi^2} &= 2\met{J}^\tr\met{W} \mat{\vet{\hat{y}}-\vet{y}},\\
+   \mat{\vet{h}} &= t \mat{\vet{\nabla}\chi^2}\\
+   \mat{\vet{p}} &\leftarrow \mat{\vet{p}} - \mat{\vet{h}}
+\end{align*}
+until a stopping criterion is reached such as
+\[
+\left | \vet{h}\right| < \epsilon.
+\]
+Note the minus sign in the update of $\vet{p}$, because we are reaching for a
+minimum of $\chi^2$.  The problem of course lies in what value of $t$ to
+use. In some simple examples, it can be fixed at some small number.
+A better option (we shall see) is \emph{backtracing
+line search}, which consists of changing the algorithm to 
+\begin{align*}
+  \mat{\vet{\nabla}\chi^2} &= 2\met{J}^\tr\met{W} \mat{\vet{\hat{y}}-\vet{y}},\\
+    t &\leftarrow 1\\
+    \text{while} \;\chi^2(\vet{p} - t\vet{\nabla}\chi^2) &> \chi^2(\vet{p}) - \frac{t}{2}\left|\vet{\nabla}\chi^2\right|^2 \;\text{do}
+       \;t \leftarrow \beta t\\
+    \vet{h} &= t \mat{\vet{\nabla}\chi^2} \\
+    \vet{p} &\leftarrow   \vet{p} - \vet{h}
+\end{align*}
+where $\beta=0.1$ (hardwired and constant) is the bactracing parameter, until 
+\[
+\left | \vet{h}\right| < \epsilon.
+\]
+The stop criterion $\epsilon$ has a default value of $1.0\times 10^{-6}$,
+and is chosen by the user by setting the variable \texttt{epsilon}.
+The Jacobian matrix is calculated
+with centered finite
+differences.
+
+
+\section{\texttt{gnewton}: Gauss-Newton method for nonlinear least squares}
+
+Two consecutive estimates of $\vet{\hat{y}}$ are related (to first order) by
+\begin{equation}
+  \met{\hat{y}(\vet{p} - \vet{h})}_{m\times 1} =
+  \met{\hat{y}(\vet{p})}_{m\times 1} - \met{J}_{m\times n}\met{h}_{n\times 1}.
+\end{equation}
+
+Consider two consecutive evaluations of $\chi^2(\vet{p})$:
+\begin{align}
+  \chi^2(\vet{p}) &= \Big[\met{\hat{y}(\vet{p})} - \met{y}\Big]^\tr\met{W}
+                    \Big[\met{\hat{y}(\vet{p})} - \met{y}\Big], \\
+                    \chi^2(\vet{p}-\vet{h}) &=
+                    \Big[\met{\hat{y}(\vet{p})} - \met{J}\met{h} - \met{y}\Big]^\tr\met{W}
+                    \Big[\met{\hat{y}(\vet{p})} - \met{J}\met{h} - \met{y}\Big].
+\end{align}
+As always, indicial notation is quicker and more clear:
+\begin{align}
+  \hat{y}_i(p_l-h_l) &= \hat{y}_i(p_l) - J_{ik}h_k,\\
+  \chi^2(p_l) &= \left[ \hat{y}_i(p_l) - y_i\right]W_{ij}\left[ \hat{y}_j(p_l) - y_j\right],\\
+  \chi^2(p_l-h_l) &= \left[ \hat{y}_i(p_l) - J_{ik}h_k - y_i\right]W_{ij}\left[ \hat{y}_j(p_l) -J_{ik}h_k - y_j\right].\label{eq:chi2-lin}
+\end{align}
+Differentiating  (\ref{eq:chi2-lin}) with respect to $h_k$,
+\begin{align}
+  \parder{\chi^2}{h_k} &= \left[ \hat{y}_i(p_l) - J_{ik}h_k - y_i\right]W_{ij}\left[ -J_{ik}\right]+
+  \left[ - J_{ik}\right]W_{ij}\left[ \hat{y}_j(p_l) -J_{ik}h_k - y_j\right]\nonumber\\
+  &= \left[ \hat{y}_i(p_l) - J_{ik}h_k - y_i\right]W_{ij}\left[ -J_{ik}\right]+
+  \left[ - J_{jk}\right]W_{ji}\left[ \hat{y}_i(p_l) -J_{jk}h_k - y_i\right]\nonumber\\
+  &= -2\left[ \hat{y}_i(p_l) - J_{ik}h_k - y_i\right]W_{ij}J_{ik}
+\end{align}
+which translates in matrix form to
+\begin{equation}
+  \Bigmat{\parder{\chi^2}{h_k}}_{1\times n} =
+  -2 \Big[\mat{\hat{y}(\vet{p})}_{m\times 1} - \met{J}_{m\times n}\met{h}_{n\times 1} - \met{y}_{m\times 1}\Big]^\tr_{1\times m}
+  \met{W}_{m\times m}\met{J}_{m \times n}.
+\end{equation}
+But
+\begin{equation}
+\vet{\nabla}_h\chi^2 = \parder{\chi^2}{h_k}\vet{e}_k,
+\end{equation}
+whence
+\begin{equation}
+  \Bigmat{\vet{\nabla}_h\chi^2} =
+  -2 \met{J}^\tr \met{W}
+  \Big[\mat{\hat{y}(\vet{p})} - \met{J}\met{h} - \met{y}\Big]
+\end{equation}
+At an extremum, $\vet{\nabla}_h\chi^2 = \boldn{0}$, so that
+\begin{align}
+  -2 \met{J}^\tr \met{W}
+  \Big[\mat{\hat{y}(\vet{p})} - \met{J}\met{h} - \met{y}\Big] &= \mat{\boldn{0}},\nonumber\\
+  \met{J}^\tr \met{W}\met{J}\met{h} -
+  \met{J}^\tr \met{W}\Big[\mat{\vet{\hat{y}}(\vet{p})} - \met{y}\Big] &= \mat{\boldn{0}}\nonumber\\
+    \met{J}^\tr \met{W}\met{J}\met{h} &= 
+  \met{J}^\tr \met{W}\Big[\mat{\vet{\hat{y}}(\vet{p})} - \met{y}\Big].\label{eq:newton-h}
+\end{align}
+The Newton method now consists of starting at some value of $\vet{p}$,
+iterating the solution $\vet{h}$ of (\ref{eq:newton-h}), and setting
+\[
+\met{p} \leftarrow \met{p} - \met{h}
+\]
+until, again, 
+\[
+\left | \vet{h}\right| < \epsilon.
+\]
+
+\section{\texttt{levmar}: Levenberg-Marquardt}
+
+The Levenberg-Marquardt algorithm is a combination of the steppest
+descent and Newton methods. First, note that the update
+$\mat{\vet{h}}$ of the steepest descent method can be written in the
+form
+\begin{align}
+  \mat{\vet{h}} &= 2t\met{J}^\tr\met{W} \mat{ \vet{\hat{y}}-\vet{y}
+  },\nonumber\\
+  \lambda \mat{\vet{h}} &= \met{J}^\tr\met{W} \mat{ \vet{\hat{y}}-\vet{y}}
+\end{align}
+with $\lambda = 1/(2t)$, while the update $\mat{\vet{h}}$ of the
+Newton method is given by (\ref{eq:newton-h}). Combining both, we
+first have
+\begin{equation}
+\Big[\met{J}^\tr \met{W}\met{J} + \lambda \met{I}\Big]\met{h} = 
+\met{J}^\tr \met{W}\Big[\mat{\vet{\hat{y}}(\vet{p})} - \met{y}\Big],
+\end{equation}
+where $\met{I}$ is the identity matrix. This was further modified by
+\cite{marquardt--algotithm} and \cite{fletcher1971modified} by setting
+\begin{equation}
+D_{ij} = J_{ki}W_{kl}J_{lj}\delta_{(ij)}
+\end{equation}
+--- that is, $\met{D}$ is a diagonal matrix formed from the diagonal
+elemens of    $\met{J}^\tr \met{W}\met{J}$ .  In our implementation,
+$\lambda = 1$ as a starting value. We now solve for the
+update $\met{h}$ and calculate $\rho$ in each iteration as 
+\begin{align}
+\Big[\met{J}^\tr \met{W}\met{J} + \lambda \met{D}\Big]\met{h} &= 
+\met{J}^\tr \met{W}\Big[\mat{\vet{\hat{y}}(\vet{p})} - \met{y}\Big],
+\\
+\rho &= \frac{\chi^2(\vet{p}) - \chi^2(\vet{p}-\vet{h})}
+{ \left| \met{h}^\tr \lambda \met{D}\met{h} + \met{J}^\tr \met{W}\Big[\mat{\vet{\hat{y}}(\vet{p})} - \met{y}\Big]\right|}
+\end{align}
+Now if $\rho > \epsilon_r = 1\times 10^{-3}$, then
+\begin{align*}
+  \met{p} &\leftarrow \met{p} - \met{h}, \\
+  \lambda &\leftarrow \lambda/\beta{\mathord{\downarrow}}
+\end{align*}
+otherwise,
+\begin{equation*}
+\lambda \leftarrow \beta{\mathord{\uparrow}} \lambda
+\end{equation*}
+where $\beta{\mathord{\downarrow}} = 5$ and
+$\beta{\mathord{\uparrow}} = 2$ implement the \emph{delayed
+gratification approach}. Note that $\beta$ is reminiscent of, but not
+the same as, the backtracing parameter $t$ of the steepest descent
+method.
+
+
+
+
+
+
+
+\bibliography{abbrevs,all}
+\bibliographystyle{apalike}
+\end{document}
+
+

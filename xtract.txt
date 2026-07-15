@@ -1,0 +1,3 @@
+proc lowess_estimate(
+   in x: real                 // point around which to do linear regression
+   ): real {

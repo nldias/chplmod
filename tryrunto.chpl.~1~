@@ -1,0 +1,19 @@
+inline proc reverse(
+   r: range(?)) {
+   return r.low .. r.high by -r.stride;
+}
+inline proc runto(
+   const in ifirst: int,
+   const in ilast: int,
+   const in iinc: int
+   ) : range {
+   if ( iinc > 0 ) then {
+      return ifirst .. ilast by iinc ;
+   }
+   else if ( iinc < 0 ) then {
+      return ilast .. ifirst by iinc ;
+   }
+   else {
+      halt("nchpl--> runto: incremment cannot be zero\n");
+   }
+}

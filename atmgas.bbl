@@ -1,0 +1,48 @@
+\begin{thebibliography}{}
+
+\bibitem[{CO2.Earth}, 2020]{co2--earth}
+{CO2.Earth} (2020).
+\newblock {The World's CO2 Home Page}.
+\newblock \available\ \url{https://www.co2.earth/}.
+\newblock \retrieved\ 2020-04-08T11:26:40.
+
+\bibitem[{COESA}, 1976]{coesa1976standard}
+{COESA} (1976).
+\newblock {U.S. Standard Atmosphere}, 1976.
+\newblock Technical report, {U.S. Government Printing Office}.
+
+\bibitem[Dias, 2021]{dias2021revisao}
+Dias, N.~L. (2021).
+\newblock Uma revisão do efeito da composição química da atmosfera sobre a
+  constante de gás do ar seco em múltiplas escalas de tempo.
+\newblock {\em Rev\ape\ Bras\ape\ Met\ape}, 36(1):1--11.
+
+\bibitem[Iribarne and Godson, 1981]{iribarne.godson--atmospheric}
+Iribarne, J.~V. and Godson, W.~L. (1981).
+\newblock {\em Atmospheric Thermodynamics}.
+\newblock D. Reidel, Dordrecht, 2\edtwo edition.
+
+\bibitem[Montgomery, 1947]{montgomery--viscosity-air}
+Montgomery, R.~B. (1947).
+\newblock Viscosity and thermal conductivity of air and diffusivity of water
+  vapor in air.
+\newblock {\em J\ape\ of Meteorol\ape}, 4:193--196.
+
+\bibitem[NIST, 2020]{nist2020search}
+NIST (2020).
+\newblock Nist chemistry web book, srd69.
+\newblock \available\ \url{https://webbook.nist.gov/chemistry/mw-ser/}.
+\newblock \retrieved\ 2020-04-10T09:05:36.
+
+\bibitem[Wallace and Hobbs, 2006]{wallace2006atmospheric}
+Wallace, J.~M. and Hobbs, P.~V. (2006).
+\newblock {\em Atmospheric Science: an introductory survey}.
+\newblock Elsevier, Amsterdam, 2\edtwo edition.
+
+\bibitem[Wikipedia, 2020]{wikipedia--atmosphere-of-earth}
+Wikipedia (2020).
+\newblock {Atmosphere} of {Earth}.
+\newblock \available\ \url{https://en.wikipedia.org/wiki/Atmosphere_of_Earth}.
+\newblock \retrieved\ 2020-04-08T11:25:15.
+
+\end{thebibliography}
