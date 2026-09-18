@@ -1,9 +1,11 @@
 // =============================================================================
 // ==> ada: attached domain arrays vec (1D) and mat (2D)
+//
+// 2026-09-17T13:50:31 this version is working relatively fine
 // =============================================================================
 record vec {
-   var dom: domain(1);                  // the 1d domain                        @\label{lin:vec-dom}@
-   var arr: [dom] real;                 // the array                            @\label{lin:vec-arr}@
+   var dom: domain(1);                  // the 1d domain                @\label{lin:vec-dom}@
+   var arr: [dom] real;                 // the array                    @\label{lin:vec-arr}@
    var vfirst = dom.first;              // the first index after reind
    var vlast = dom.last;                // the last index after reind
    var vdelta = 0;                      // the array shift
@@ -18,7 +20,7 @@ record vec {
       vlast = dv.last;
       vdelta = vfirst - dom.first;
    }
-   inline proc ref this(in k: int) ref {       // access arr[k]                @\label{lin:this-ark}@
+   proc ref this(in k: int) ref {       // access arr[k]                @\label{lin:this-ark}@
       return arr[k-vdelta];
    }
    iter ref these() ref {               // iterate over vec             @\label{lin:these-vec}@
@@ -34,29 +36,8 @@ record vec {
    //    }
    // }
    // --------------------------------------------------------------------------
-   // These two: "proc init=(" and "operator =(" seem to be needed together.
-   // --------------------------------------------------------------------------
-   proc init=(const ref rhs: vec)  {
-      this.dom = rhs.dom;
-      this.arr = rhs.arr;
-      this.vfirst = rhs.vfirst;              
-      this.vlast = rhs.vlast;                
-      this.vdelta = rhs.vdelta;             
-   }
-   operator =(ref lhs: vec, const in rhs: vec) {
-      lhs.dom = rhs.dom;
-      lhs.arr = rhs.arr;
-      lhs.vfirst = rhs.vfirst;              
-      lhs.vlast = rhs.vlast;                
-      lhs.vdelta = rhs.vdelta;             
-   }
-   // --------------------------------------------------------------------------
    // a cast operator is needed for initialization and assignment from arrays
    // --------------------------------------------------------------------------
-   proc init=(const ref rhs: [] real) where rhs.rank == 1 {
-      this.dom = rhs.domain;
-      this.arr = rhs;
-   }
    operator :(a: [] real, type t: vec) {
       var v: vec = a;
       return v;
@@ -65,18 +46,14 @@ record vec {
       lhs.dom = rhs.domain;
       lhs.arr = rhs;
    }
-   // --------------------------------------------------------------------------
-   // operator overloading: *all* of the subsequent operators return vec. if you
-   // want to assign an operation between an array b and a vec c to an array a,
-   // just say: a = b + c.arr
-   //
-   // the domain of the vec returned is always the same as the domain of the
-   // lhs, except when the lhs is a scalar
-   // --------------------------------------------------------------------------
-   operator +=(ref rhs: [] real) where rhs.rank == 1 {
-      assert (this.size == rhs.size);
-      this.arr += rhs;
-   }
+// -------------------------------------------------------------------
+// operator overloading: *all* of the subsequent operators return
+// vec. if you want to assign an operation between an array b and a
+// vec c to an array a, just say: a = b + c.arr
+//
+// the domain of the vec returned is always the same as the domain of
+// the lhs, except when the lhs is a scalar
+// -------------------------------------------------------------------
    operator +=(ref rhs: vec) {    // this + vec                                  
       this.arr += rhs.arr;
    }
@@ -280,7 +257,7 @@ record mat {
       v1first = dv1.first;
       v1delta = v1first - dom.dim(1).first;
    }
-   inline proc ref this(in k: int, in l: int) ref {       // access arr[k]                @\label{lin:this-ark}@
+   proc ref this(in k: int, in l: int) ref {       // access arr[k]                @\label{lin:this-ark}@
       return arr[k-v0delta,l-v1delta];
    }
    // iter ref these() ref {               // iterate over vec             @\label{lin:these-vec}@

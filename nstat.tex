@@ -12,12 +12,6 @@
 \usepackage{amsmath}
 \usepackage{iexec}
 \usepackage{listings}
-%% \usepackage{subscript}
-%% \usepackage{enumerate}
-%% \usepackage{booktabs}
-%% \usepackage{tabu}
-%% \usepackage{setspace}
-%% \usepackage{comment}
 \usepackage[defaultlines=4,all]{nowidow}
 \usepackage{needspace}
 \usepackage{graphicx}
@@ -34,7 +28,7 @@
 \renewcommand{\ttdefault}{lmtt}% default cmtt
 \newcommand{\texttk}[1]{\texttt{\bfseries #1}}
 
-
+\allowdisplaybreaks
 
 \title{Documentation for \texttt{nstat.chpl}}
 
@@ -191,135 +185,6 @@ where $w_i$ are the weights of the data points $x_i$, and
 $n$ is the size of the arrays $\vet{w}$ and $\vet{x}$.
 
 
-\section{\texttt{gmean}: geometric mean}
-
-\subsection{Use}
-\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc gmean' -A3 nstat.chpl}
-
-\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
-
-
-
-\subsection{Theory}
-
-Given a sequence $(x_1, x_2, \ldots, x_n)$ of \emph{strictly positive
-  real numbers}, the geometric mean is
-\begin{align}
-  \tilde{x} &= \left[\prod_{i=1}^n x_i \right]^{1/n}\label{eq:gmean-prod}
-\end{align}
-For large $n$ and small individual values of $x_i$, however,
-(\ref{eq:gmean-prod}) can lead to underflow. It is much more robust to
-write
-\begin{align}
-  \tilde{x} &= \exp\left\{ \ln \left[ \left(\prod_{i=1}^n x_i
-      \right)^{1/n}\right]\right\}\nonumber \\
-    &= \exp\left[\frac{1}{n} \sum_{i=1}^n \ln(x_i)\right].\label{eq:gmean-explog}
-\end{align}
-
-\section{\texttt{logmod}: log-modulus function}
-
-\subsection{Use}
-\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc logmod' -A2 nstat.chpl}
-
-\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
-
-\subsection{Theory}
-
-See (\ref{eq:def-logmod}) below.
-
-\section{\texttt{expmod}: exponential-modulus function}
-
-\subsection{Use}
-\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc expmod' -A2 nstat.chpl}
-
-\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
-
-\subsection{Theory}
-
-See (\ref{eq:def-expmod}) below.
-
-
-
-\section{\texttt{gmom}: geometric-modulus mean}
-
-\subsection{Use}
-\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc gmom' -A3 nstat.chpl}
-
-\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
-
-
-
-\subsection{Theory}
-
-
-
-\texttt{gmom} is my own humble attempt to generalize the idea of a
-geometric mean to sequences containing negative and null values, as well as
-positive.
-
-First, consider a sequence $(x_1, x_2, \ldots, x_n)$ containing only
-negative values. It is reasonable to define its ``geometric'' mean as
-\begin{align}
-  \tilde{x} &= -\exp\left[\frac{1}{n} \sum_{i=1}^n \ln(\left|x_i\right|)\right].\label{eq:gmean-neg}
-\end{align}
-For a sequence containing negative, null, and positive values,
-$\ln(\cdot)$ can no longer be used, and the singularity at the origin
-needs to be avoided. A function that has those attributes and is
-asymptotically equal to $\ln(\cdot)$ for large positive values of its
-argument is the \emph{log-modulus} function introduced by
-\cite{john1980alternative}:
-\begin{equation}
-\logmod(x) \equiv \sign(x)\ln(|x| + 1).\label{eq:def-logmod}
-\end{equation}
-Note that, asymptotically,
-\begin{equation}
-  \logmod(x) \sim \begin{cases}
-    x, & x \sim 0, \\
-    \sign(x)\ln(|x|), & x \gg 1,
-  \end{cases}
-\end{equation}
-and that $\logmod(x)$ is odd.
-
-In order to mimic (\ref{eq:gmean-explog}), we need the inverse of $\logmod$:
-\begin{align*}
-  y &= \sign(x)\ln(|x| + 1),  \\
-  \sign(y)y &= \ln(|x| + 1),  \\
-  \intertext{(because $\logmod$ is odd)}
-  \exp\left(\sign(y)y\right) &= |x| + 1, \\
-  \exp\left(|y|\right) &= |x| + 1, \\
-  |x| &= \exp\left(|y|\right) - 1, \\
-  x &= \sign(y)\left[ \exp\left(|y|\right) - 1\right],
-\end{align*}
-whence
-\begin{equation}
-\expmod(x) \equiv \sign(x)\left[ \exp\left(|x|\right) - 1\right]\label{eq:def-expmod}
-\end{equation}
-is the \emph{exponential-modulus} function.
-
-We are now ready to define the \emph{geometric-modulus} mean:
-\begin{equation}
-\tilde{x} \equiv \expmod\left[ \frac{1}{n}\sum_{i=1}^n
-  \logmod(x_i)\right].
-\label{eq:def-gmom}
-\end{equation}
-Evidently, for a sequence of positive real values where $x_i \gg 1\;
-\forall i = 1, \ldots, n$, (\ref{eq:def-gmom}) will produce results
-which are very close to (\ref{eq:gmean-explog}). However, if on the
-other hand $x_i \ll 1\; \forall i = 1, \ldots, n$, (\ref{eq:def-gmom})
-will be very much like the arithmetic mean, which is undesirable. The
-solution to always obtain a ``geometric mean''-like behavior for any
-sequence (now including possibly null and negative values as well) is
-to re-scale before averaging, by means of the following sequence of
-operations:
-\begin{align}
-  \delta &= \frac{\min(|x_i|)}{16}, \qquad x_i \ne 0, \label{eq:delta}\\
-  \xi_i &= \frac{x_i}{\delta}, \label{eq:xi}\\
-  \tilde{\xi} &= \expmod\left[ \frac{1}{n}\sum_{i=1}^n
-    \logmod(\xi_i)\right], \label{eq:tilde-xi}\\
-  \tilde{x} &= \delta \tilde{\xi}.\label{eq:tilde-x}
-\end{align}
-The factor 16 in (\ref{eq:delta}) is arbitrary and is meant to force
-all non-null $\xi$ to be ``sufficiently'' far from $\pm 1$.
 
 
 \section{\texttt{covar}: the covariance}
@@ -436,6 +301,122 @@ Then interpolates
 q_j = F^{-1}\left( j\times 0.25\right), \qquad j = 1,2,3,
 \end{equation}
 and returns $(q_1, q_2, q_3)$.
+
+\section{\texttt{gmean}: geometric mean}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc gmean' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+
+\subsection{Theory}
+
+Given a sequence $(x_1, x_2, \ldots, x_n)$ of \emph{strictly positive
+  real numbers}, the geometric mean is
+\begin{align}
+  \tilde{x} &= \left[\prod_{i=1}^n x_i \right]^{1/n}\label{eq:gmean-prod}
+\end{align}
+For large $n$ and small individual values of $x_i$, however,
+(\ref{eq:gmean-prod}) can lead to underflow. It is much more robust to
+write
+\begin{align}
+  \tilde{x} &= \exp\left\{ \ln \left[ \left(\prod_{i=1}^n x_i
+      \right)^{1/n}\right]\right\}\nonumber \\
+    &= \exp\left[\frac{1}{n} \sum_{i=1}^n \ln(x_i)\right].\label{eq:gmean-explog}
+\end{align}
+
+\section{\texttt{gmom}: geometric-modulus mean}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc gmom' -A3 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+
+\subsection{Theory}
+
+
+
+\texttt{gmom} is my own humble attempt to generalize the idea of a
+geometric mean to sequences containing negative and null values, as well as
+positive.
+
+First, consider a sequence $(x_1, x_2, \ldots, x_n)$ containing only
+negative values. It is reasonable to define its ``geometric'' mean as
+\begin{align}
+  \tilde{x} &= -\exp\left[\frac{1}{n} \sum_{i=1}^n \ln(\left|x_i\right|)\right].\label{eq:gmean-neg}
+\end{align}
+For a sequence containing negative, null, and positive values,
+$\ln(\cdot)$ can no longer be used, and the singularity at the origin
+needs to be avoided. A function that has those attributes and is
+asymptotically equal to $\ln(\cdot)$ for large positive values of its
+argument is the \emph{log-modulus} function introduced by
+\cite{john1980alternative}:
+\begin{equation}
+\logmod(x) \equiv \sign(x)\ln(|x| + 1).\label{eq:def-logmod}
+\end{equation}
+Note that, asymptotically,
+\begin{equation}
+  \logmod(x) \sim \begin{cases}
+    x, & x \sim 0, \\
+    \sign(x)\ln(|x|), & x \gg 1,
+  \end{cases}
+\end{equation}
+and that $\logmod(x)$ is odd.
+
+In order to mimic (\ref{eq:gmean-explog}), we need the inverse of $\logmod$:
+\begin{align*}
+  y &= \sign(x)\ln(|x| + 1),  \\
+  \sign(y)y &= \ln(|x| + 1),  \\
+  \intertext{(because $\logmod$ is odd)}
+  \exp\left(\sign(y)y\right) &= |x| + 1, \\
+  \exp\left(|y|\right) &= |x| + 1, \\
+  |x| &= \exp\left(|y|\right) - 1, \\
+  x &= \sign(y)\left[ \exp\left(|y|\right) - 1\right],
+\end{align*}
+whence
+\begin{equation}
+\expmod(x) \equiv \sign(x)\left[ \exp\left(|x|\right) - 1\right]\label{eq:def-expmod}
+\end{equation}
+is the \emph{exponential-modulus} function.
+
+\vspace*{0.25cm}
+\hrule
+\vspace*{0.25cm}
+\noindent\textbf{Note:} the log-modulus and exponential-modulus functions are defined in
+\texttt{nmth.chpl} and imported into \texttt{nstat.chpl}.
+\vspace*{0.25cm}
+\hrule
+\vspace*{0.25cm}
+
+We are now ready to define the \emph{geometric-modulus} mean:
+\begin{equation}
+\tilde{x} \equiv \expmod\left[ \frac{1}{n}\sum_{i=1}^n
+  \logmod(x_i)\right].
+\label{eq:def-gmom}
+\end{equation}
+Evidently, for a sequence of positive real values where $x_i \gg 1\;
+\forall i = 1, \ldots, n$, (\ref{eq:def-gmom}) will produce results
+which are very close to (\ref{eq:gmean-explog}). However, if on the
+other hand $x_i \ll 1\; \forall i = 1, \ldots, n$, (\ref{eq:def-gmom})
+will be very much like the arithmetic mean, which is undesirable. The
+solution to always obtain a ``geometric mean''-like behavior for any
+sequence (now including possibly null and negative values as well) is
+to re-scale before averaging, by means of the following sequence of
+operations:
+\begin{align}
+  \delta &= \frac{\min(|x_i|)}{16}, \qquad x_i \ne 0, \label{eq:delta}\\
+  \xi_i &= \frac{x_i}{\delta}, \label{eq:xi}\\
+  \tilde{\xi} &= \expmod\left[ \frac{1}{n}\sum_{i=1}^n
+    \logmod(\xi_i)\right], \label{eq:tilde-xi}\\
+  \tilde{x} &= \delta \tilde{\xi}.\label{eq:tilde-x}
+\end{align}
+The factor 16 in (\ref{eq:delta}) is arbitrary and is meant to force
+all non-null $\xi$ to be ``sufficiently'' far from $\pm 1$.
+
 
 \section{\texttt{whiskers}: returns the minimum, quartiles, and maximum of an array}
 
@@ -1081,6 +1062,107 @@ method.
 
 
 
+\section{\texttt{triweight}: triangular filter function}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc triweight' -A4 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+\subsection{Theory}
+
+Given the integer $m$ and the interval spacing $\Delta x$, this
+procedure returns $2m + 1$ values of $w(x_i)$ at $x_i = i\Delta x,\; i
+= -m, \ldots, +m$. The triangular $w(x)$ filter function is defined by
+\begin{equation}
+  w(x) = a|x| + b, \label{eq:tri-yabx}
+\end{equation}
+such that
+\begin{equation}
+  w((m+1)\Delta x) = 0, \label{eq:triw-zero-mplus1}
+\end{equation}
+and
+\begin{equation}
+  (m+1)\Delta x b = 1. \label{eq:triw-area-one}
+\end{equation}
+(\ref{eq:triw-zero-mplus1}) defines the half-width $m+1$ of the filter,
+and (\ref{eq:triw-area-one}) imposes the area of $w(x)$ to be equal to
+one. These two conditions give
+\begin{equation}
+b = \frac{1}{(m+1)\Delta x};\label{eq:triw-b}
+\end{equation}
+and
+\begin{align}
+  a(m+1)\Delta x + \frac{1}{(m+1)\Delta x} &= 0, \nonumber \\
+  a(m+1)\Delta x &= - \frac{1}{(m+1)\Delta x}, \nonumber \\
+a &= -\frac{1}{[(m+1)\Delta x]^2}.  \label{eq:triw-a}
+\end{align}
+
+With $a$ and $b$ calculated, the discrete values $w_i$ of $w$ at $x_i =
+i\Delta x$ are
+\begin{equation}
+w_i = \frac{1}{(m+1)\Delta x}\left[ 1 -
+  \frac{|i|}{m+1}\right].\label{eq:triw-wi}
+\end{equation}
+Using the trapezoid rule (which is exact because $w(x)$ is a
+1\rst\ -order polynomial), we can verify that
+\begin{align}
+\int_{-(m+1)\Delta x}^{+(m+1)\Delta x} w(x)\,\md{x} &=
+\left[w_{-(m+1)} + 2\left(w_{-m} + \ldots + w_{+m}\right) +
+  w_{+(m+1)}\right]\frac{\Delta x}{2}\nonumber\\
+&= 2\left[w_{-m} + \ldots + w_{+m}\right]\frac{\Delta x}{2}\nonumber\\
+&= \left[w_{-m} + \ldots + w_{+m}\right]\Delta x\nonumber\\
+&= \Delta x w_0 + 2 \Delta x \sum_{i=1}^m w_i\nonumber\\
+&= \frac{1}{m+1} + 2\sum_{i=1}^m \frac{1}{m+1}\left[ 1 - \frac{i}{m+1}\right]\nonumber\\
+&= \frac{1}{m+1} + 2\sum_{i=1}^m \frac{1}{m+1}\left[
+  1 - \frac{1}{m+1}
+  + 1 - \frac{2}{m+1} + \ldots
+  + 1 - \frac{m}{m+1}\right]\nonumber\\
+&= \frac{1}{m+1} + 2\sum_{i=1}^m \frac{1}{m+1}\left[ m -
+  \frac{1}{m+1}\left( 1 + \ldots + m\right)\right]\nonumber \\
+&= \frac{1}{m+1} + \frac{2}{m+1}\left[ m -
+  \frac{1}{m+1}\times\frac{1}{2}\times m(m+1)\right]\nonumber\\
+&= \frac{1}{m+1} + \frac{2}{m+1}\times\frac{m}{2}\nonumber\\
+&= \frac{1}{m+1} + \frac{m}{m+1} = 1\blob
+\end{align}
+
+Note that if we set $\Delta x = 1$ in (\ref{eq:triw-wi}), then the
+weigths sum to 1:
+\begin{equation}
+\sum_{i=-m}^{+m} w_i = 1,
+\end{equation}
+which is often more convenient.
+
+
+\section{\texttt{movavg}: moving average of $\vet{x}$ with a filter $\vet{w}(x)$.}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc movavg' -A4 nstat.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+\subsection{Theory}
+
+Let $\vet{w}$ be a digitalized filter with $2m + 1$ points and
+\begin{equation}
+\sum_{i=-m}^{+m} w_i = 1.
+\end{equation}
+A brute-force, ``time-domain'' convolution of $\vet{w}$ with an array
+$\vet{x}$ produces a filtered array $\vet{\tilde{x}}$:
+\begin{equation}
+\vet{\tilde{x}} = \vet{x}*\vet{w},
+\end{equation}
+with
+\begin{equation}
+\tilde{x}_i = \sum_{k=-m}^{+m} w_k x_{(i+k)\bmod n}
+\end{equation}
+for $i = 0,\ldots,n-1$. The {mod} operator is implemented
+through the standard Chapel \texttt{mod(i+k,n)} function. Using
+$(i+k)\bmod n$ ``wraps'' the $\vet{x}$ indices around: for example,
+$x_{0-1\bmod n}$ will return $x_{n-1}$, $x_{[n-1]+1}\bmod n$ will
+return $x_0$, etc..
 
 
 \bibliography{abbrevs,all}

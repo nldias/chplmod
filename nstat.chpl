@@ -18,12 +18,15 @@
 // 2025-05-20T13:51:35 "fixing" steep, gnewton and levmar to the updated
 //                     ada.chpl, where assignment between vecs and arrays is
 //                     transparent (hopefully)
+// 2026-07-24T17:46:21 introducing and documenting triweight and movavg
 // =============================================================================
+use IO only readln, stderr;
+use Math;
+use ada;
+use nmth only logmod, expmod;
 use smatrix;
 use ssr only allequal, allequalto, amin, amax, aminz, interp, heapsort, indxsort, indxquickselect;
-use IO only readln, stderr;
-use ada;
-use Math;
+use Random only fillRandom;
 // -----------------------------------------------------------------------------
 // --> stat1: mean
 // -----------------------------------------------------------------------------
@@ -274,22 +277,6 @@ where x.rank == 1 {
    return gm;
 }
 // -----------------------------------------------------------------------------
-// --> log-modulus function sgn(x)*log(|x| + 1)
-// -----------------------------------------------------------------------------
-inline proc logmod(
-   const in x: real
-): real {
-   return sgn(x)*log(abs(x)+1);
-}
-// -----------------------------------------------------------------------------
-// --> exp-modulus function sgn(x)*(exp(|x|) - 1)
-// -----------------------------------------------------------------------------
-inline proc expmod(
-   const in x: real
-): real {
-   return sgn(x)*(exp(abs(x))-1.0);
-}
-// -----------------------------------------------------------------------------
 // --> gmom: geometric-modulus mean: calculates
 //
 // expmod( (sum logmod(x[i]))/n )
@@ -356,11 +343,12 @@ proc trivar(
 //
 // 2012-08-21T08:55:53 Python version
 // 2021-03-19T09:37:33 Chapel version
+// 2026-07-24T16:32:53 Ruling out complex types, because they cannot be ordered.
 // -----------------------------------------------------------------------------
 proc median(
    const ref ax: [] ?at       // the data
-   ): at                         // the median
-   where (isNumericType(at) && ax.rank == 1) {
+   ): at                      // the median
+   where (isNumericType(at) && (!isComplex(at)) && ax.rank == 1) {
    var n = ax.size;
    ref x = ax.reindex(0..n-1);
    if n == 0 then {
@@ -391,8 +379,8 @@ proc median(
 // -----------------------------------------------------------------------------
 proc nanmedian(
    const ref ax: [] ?at       // the data (may include NaNs)
-): at                         // the median
-where ax.rank == 1 {
+   ): at                      // the median
+   where (isNumericType(at) && (!isComplex(at)) && ax.rank == 1) {
    var x = purgeval(nan,ax);
    var n = x.size;
    if n == 0 then {
@@ -919,11 +907,11 @@ proc lowess_estimate(
    // -----------------------------------------------------------------------------
    // lots of matrix multiplications!
    // -----------------------------------------------------------------------------
-   dot_mt_diagm(X,W,A);
+   dot_mtd(X,W,A);
    dot_mm(A,X,B);
    minvgj(B);
    dot_mmt(B,X,A);            // re-using A !!!
-   dot_m_diagm(A,W,C);
+   dot_md(A,W,C);
    dot_mv(C,Y,beta);          // finally the parameters of the LLR
    // --------------------------------------------------------------------------
    // now we can estimate!
@@ -1024,15 +1012,17 @@ proc performance(
    var
       absdif = 0.0,
       absdom = 0.0,
-      cvOP = 0.0,
-      mse = 0.0,
+      cvOP = 0.0,        // covariance of O, P
+      mse = 0.0,         // mean square error
       r = 0.0,
       Cd = 0.0,
-      varO = 0.0,
-      varP = 0.0;
+      varO = 0.0,        // variance of O
+      varP = 0.0;        // variance of P
 // -----------------------------------------------------------------------------
-//  because all Os and all Ps may be equal, this is not the most efficient way
-//  to calculate things, but ...
+//  Because all Os and all Ps may be equal, this is not the most
+//  efficient way to calculate things, but ... Calculate variances and
+//  covariances. Calculate the mean absolute error and mean square
+//  error.
 //  -----------------------------------------------------------------------------
    for (xo,xp) in zip(O,P) do {
       var del_o = xo - Omean;
@@ -1104,26 +1094,36 @@ proc steep(
                     ref ap: vec,   // the parameters
                     ref ay: vec),  // in the sim model we call func(x,p,y)
    const in epsilon = 1.0e-6       // stop criterion
-   ) : (real,real,real)
+   ) : (real,real,real)            // (redchi2,sig_yhat,r2)
    where ( w.rank == 1 && sigp.rank == 1 && cp.rank == 2) {
-   const maxiter = 100000;         // steep may take a looong time to converge
+   const maxiter = 100_000;        // steep may take a looong time to converge
+   // --------------------------------------------------------------------------
+   // x, y & p dimensions
+   // --------------------------------------------------------------------------
    const m = x.shape(0);           // the number of data points
+   const ell = x.shape(1);         // the dimension of the data points
    const n = p.size;               // the number of parameters
-// -----------------------------------------------------------------------------
-// check all shapes and sizes
-// -----------------------------------------------------------------------------   
+   // --------------------------------------------------------------------------
+   // Check all shapes and sizes.
+   // --------------------------------------------------------------------------
    assert (y.size == m);
    assert (w.size == m);
    assert (sigp.size == n);
    assert (cp.shape == (n,n));
-// -----------------------------------------------------------------------------
-// local scalar variables
-// -----------------------------------------------------------------------------   
+   // --------------------------------------------------------------------------
+   // Reindex everybody! From now everybody is 1-based here.
+   // --------------------------------------------------------------------------
+   x.reindex(1..m,1..ell);
+   y.reindex(1..m);
+   p.reindex(1..n);
+   // --------------------------------------------------------------------------
+   // local scalar variables
+   // --------------------------------------------------------------------------
    var eps = epsilon;
    var iiter = 0;                  // number of iterations
-// -----------------------------------------------------------------------------
-// local array variables
-// -----------------------------------------------------------------------------   
+   // --------------------------------------------------------------------------
+   // local array variables
+   // --------------------------------------------------------------------------
    var J: [1..m,1..n] real;        // the jacobian matrix
    var dely: [1..m] real;          // yhat - y
    var vaux_m: [1..m] real;        // aux m-vector
@@ -1131,64 +1131,65 @@ proc steep(
    var maux_mn: [1..m,1..n] real;  // aux (m,n)-matrix
    var gradchi2: [1..n] real;      // the gradient
    var hh: [1..n] real;            // the step in p
-// -----------------------------------------------------------------------------
-// arguments to functions must be vecs
-// -----------------------------------------------------------------------------   
+   // --------------------------------------------------------------------------
+   // arguments to functions must be vecs
+   // --------------------------------------------------------------------------
    var yhat = new vec({1..m});     // function estimates
-// -----------------------------------------------------------------------------
-// if all w are equal to -1, then there is no estimate of w: set it to 1
-// -----------------------------------------------------------------------------
+   // -----------------------------------------------------------------------------
+   // if all w are equal to -1, then there is no estimate of w: set it to 1
+   // -----------------------------------------------------------------------------
    var noweights = false;
    if allequalto(w,-1.0) then {
       w = 1.0;
       noweights = true;
    }
-// -----------------------------------------------------------------------------
-// main loop
-// -----------------------------------------------------------------------------   
+   // -----------------------------------------------------------------------------
+   // main loop
+   // -----------------------------------------------------------------------------   
    while eps >= epsilon do {
       if iiter > maxiter then {
          writef("nstat-->steep: I have exceeded %i iterations\n",maxiter);
          return (-1.0, -1.0, -1.0);
       }
-// -----------------------------------------------------------------------------
-// recalculate the Jacobian
-// -----------------------------------------------------------------------------
+      // -----------------------------------------------------------------------------
+      // recalculate the Jacobian
+      // -----------------------------------------------------------------------------
       func(x,p,yhat);                   // estimate yi's
       dely = yhat.arr - y.arr;          // [hat{y}-y]: dely is an array
       simplejacob();                    // update the jacobian matrix
-      dot_diagm_v(w,dely,vaux_m);       // W[hat{y} - y]
-      dot_mtv(J,vaux_m,gradchi2);       // J'W[hat{y} - y]
-      gradchi2 *= 2;                    // 2J'W[hat{y} - y]
-// -----------------------------------------------------------------------------
-// backtracking line search
-// -----------------------------------------------------------------------------      
-      var modgr2 = dot_vtv(gradchi2,gradchi2);    // |grad chi^2|
+      dot_dv(w,dely,vaux_m);       // W·[hat{y} - y]
+      dot_mtv(J,vaux_m,gradchi2);       // J'·W·[hat{y} - y]
+      gradchi2 *= 2;                    // 2J'·W·[hat{y} - y]
+      // -----------------------------------------------------------------------------
+      // backtracking line search
+      // -----------------------------------------------------------------------------      
+      var modgr2 = dot_vtv(gradchi2,gradchi2);    // |∇ χ^2|
       var t = 1.0;                                // backtracing parameter
       var pa = p - tovec(t*gradchi2);             // check two chi^2s
                                                   // pa is a vec
       var chi2a = chi2(pa);                       // chi2 needs a vec
       var chi2b = chi2(p) - (t/2)*modgr2;         // chi2 needs a vec
-// -----------------------------------------------------------------------------
-// backtracing loop
-// -----------------------------------------------------------------------------      
+      // -----------------------------------------------------------------------------
+      // backtracing loop
+      // -----------------------------------------------------------------------------      
       while chi2a > chi2b do {
          t *= 0.1;
          pa = p - tovec(t*gradchi2);
          chi2a = chi2(pa);
          chi2b = chi2(p) - (t/2)*modgr2;
       }
-// -----------------------------------------------------------------------------
-// found the right scaling for the size of the step
-// -----------------------------------------------------------------------------      
+      // -----------------------------------------------------------------------------
+      // found the right scaling for the size of the step
+      // -----------------------------------------------------------------------------      
       hh = t*gradchi2;
       p = p - tovec(hh) ;
       eps = sqrt(dot_vtv(hh,hh));
       iiter += 1;
    }
-// -----------------------------------------------------------------------------
-// error statistics
-// -----------------------------------------------------------------------------
+   writef("In %i iterations\n",iiter);
+   // -----------------------------------------------------------------------------
+   // error statistics
+   // -----------------------------------------------------------------------------
    var sumw = (+ reduce w);             // sum of weights               
    var sum2yhat = chi2(p);              // sum of squares of deviations 
    var sig2yhat = sum2yhat/sumw;        // variance of deviations       
@@ -1201,23 +1202,23 @@ proc steep(
    else {
       redchi2 = sum2yhat/(m - n);
    }
-// -----------------------------------------------------------------------------
-// straighforward calculation of the parameter covariance matrix and the
-// asymptotic standard parameter errors
-// -----------------------------------------------------------------------------
-   dot_diagm_m(w,J,maux_mn);       // WJ
+   // -----------------------------------------------------------------------------
+   // straighforward calculation of the parameter covariance matrix and the
+   // asymptotic standard parameter errors
+   // -----------------------------------------------------------------------------
+   dot_dm(w,J,maux_mn);       // WJ
    dot_mtm(J,maux_mn,cp);          // J'WJ
    minvgj(cp);                     // [J'WJ]^{-1}
    mvdiag(cp,sigp);                // diagonal of [J'WJ]^{-1}
    sigp = sqrt(sigp);              // square root of each element
-// -----------------------------------------------------------------------------
-// square root below is for the standard error of estimate, which is more
-// readily grasped
-// -----------------------------------------------------------------------------
+   // -----------------------------------------------------------------------------
+   // square root below is for the standard error of estimate, which is more
+   // readily grasped
+   // -----------------------------------------------------------------------------
    return (redchi2,sqrt(sig2yhat),r2);
-// -----------------------------------------------------------------------------
-// proc chi2: the figure of merit
-// -----------------------------------------------------------------------------
+   // -----------------------------------------------------------------------------
+   // proc chi2: the figure of merit
+   // -----------------------------------------------------------------------------
    proc chi2(
       ref pa: vec
    ): real  {
@@ -1226,14 +1227,14 @@ proc steep(
       var delya: [1..m] real;
       func(x,pa,ya);
       delya = ya.arr - y.arr;
-      dot_diagm_v(w,delya,vaux_m);
+      dot_dv(w,delya,vaux_m);
       var merit = dot_vtv(vaux_m,delya);
       // writeln(" merit = ", merit);
       return merit;      
    }
-// -----------------------------------------------------------------------------
-// brute-force calculation of the jacobian matrix
-// -----------------------------------------------------------------------------   
+   // -----------------------------------------------------------------------------
+   // brute-force calculation of the jacobian matrix
+   // -----------------------------------------------------------------------------   
    proc simplejacob() {
       const delp: [1..n] real = 1.0e-6;
       var forwp = new vec({1..n});
@@ -1243,6 +1244,170 @@ proc steep(
       for k in 1..n do {
          forwp = p;
          backp = p ;
+         forwp[k] += delp[k];
+         backp[k] -= delp[k];
+         func(x,forwp,yplus);
+         func(x,backp,yminus);
+         J[1..m,k] = (yplus.arr[1..m] - yminus.arr[1..m])/(2*delp[k]);
+      }
+   }
+}
+
+// ------------------------------------------------------------------------------
+// --> alpha_steep: nonlinear least squares by curve fitting with the alpha steepest
+// descent method.
+//
+// See Chapter 14 of Strikwerda, J. C. Finite Difference Schemes and Partial
+// Differential Equations SIAM, 2004
+// ------------------------------------------------------------------------------
+proc alpha_steep(
+   ref x: mat,          // ind variables (used as arg to func) (m x ell)
+   ref y: vec,          // data to be fit by func(x,p,y) (m x 1)
+   ref w: [] real,      // array, *not matrix*, of weights (m x 1)
+   ref theta: vec,      // initial guess of parameter values  (n x 1)
+                        // returns the estimated parameters
+   ref sigtheta: [] real,          // standard  errors of the parameters
+   ref ctheta: [] real,            // parameter covariance matrix
+   const func: proc(ref ax: mat,   // the independent variables
+                    ref ap: vec,   // the parameters
+                    ref ay: vec),  // in the sim model we call func(x,p,y)
+   const in epsilon = 1.0e-6       // stop criterion
+   ) : (real,real,real)            // (redchi2,sig_yhat,r2)
+   where ( w.rank == 1 && sigtheta.rank == 1 && ctheta.rank == 2) {
+   const pmax  = 100_000;          // steep may take a looong time to converge
+   // --------------------------------------------------------------------------
+   // x, y & theta dimensions
+   // --------------------------------------------------------------------------
+   const m = x.shape(0);           // the number of data points
+   const ell = x.shape(1);         // the dimension of the data points
+   const n = theta.size;           // the number of parameters
+   // --------------------------------------------------------------------------
+   // Check all shapes and sizes.
+   // --------------------------------------------------------------------------
+   assert (y.size == m);
+   assert (w.size == m);
+   assert (sigtheta.size == n);
+   assert (ctheta.shape == (n,n));
+   // --------------------------------------------------------------------------
+   // Reindex everybody! From now everybody is 1-based here.
+   // --------------------------------------------------------------------------
+   x.reindex(1..m,1..ell);
+   y.reindex(1..m);
+   theta.reindex(1..n);
+   // --------------------------------------------------------------------------
+   // local scalar variables
+   // --------------------------------------------------------------------------
+   var eps = epsilon;
+   var p = 0;                  // number of iterations
+   var szr: real;              // the size of r
+   // --------------------------------------------------------------------------
+   // local array variables
+   // --------------------------------------------------------------------------
+   var J: [1..m,1..n] real;        // the jacobian matrix
+   var b: [1..m] real;             // W·y
+   var vaux_m: [1..m] real;        // aux m-vector
+   var vaux_n: [1..n] real;        // aux n-vector
+   var maux_mn: [1..m,1..n] real;  // aux (m,n)-matrix
+   var maux_nn: [1..n,1..n] real;  // aux (n,n)-matrix
+   var r: [1..n] real;             // the step in theta
+   // --------------------------------------------------------------------------
+   // Arguments to functions must be vecs.
+   // --------------------------------------------------------------------------
+   var yhat = new vec({1..m});     // function estimates
+   // --------------------------------------------------------------------------
+   // Calculate b once and for all.
+   // --------------------------------------------------------------------------
+   dot_dv(w,y.arr,b);
+   // -----------------------------------------------------------------------------
+   // If all w are equal to -1, then there is no estimate of w: set it
+   // to 1. But is this necessary?
+   // -----------------------------------------------------------------------------
+   // var noweights = false;
+   // if allequalto(w,-1.0) then {
+   //    w = 1.0;
+   //    noweights = true;
+   // }
+   // -----------------------------------------------------------------------------
+   // main loop
+   // -----------------------------------------------------------------------------   
+   while eps >= epsilon do {
+      p += 1;
+      if p > pmax then {
+         writef("nstat-->nsteep: I have exceeded %i iterations\n",pmax);
+         return (-1.0, -1.0, -1.0);
+      }
+      // -----------------------------------------------------------------------------
+      // Calculate yhat.
+      // Recalculate the Jacobian.
+      // -----------------------------------------------------------------------------
+      func(x,theta,yhat);               // estimate yi's
+      simplejacob();                    // update the jacobian matrix
+      dot_dv(w,yhat.arr,vaux_m);   // W·yhat
+      vaux_m = b - vaux_m;              // b - W·yhat
+      dot_mtv(J,vaux_m,r);              // r = J'·[b - W·yhat]
+      var rdotr = dot_vtv(r,r);         // r·r
+      dot_dm(w,J,maux_mn);         // W·J
+      dot_mtm(J,maux_mn,maux_nn);       // J'·W·J
+      dot_mv(maux_nn,r,vaux_n);         // [J'·W·J]·r
+      var rJWJr = dot_vtv(r,vaux_n);    // r·[J'·W·J]·r
+      var alpha = rdotr/rJWJr;          // (r·r)/(r·[J'·W·J]·r)
+      theta.arr += alpha*r;
+      eps = sqrt(rdotr);
+      // writef("p, alpha, szr = %8i %10.8dr %10.8dr\n",p,alpha,eps);
+   }
+   // writef("In %i iterations\n",p);
+   // -----------------------------------------------------------------------------
+   // error statistics
+   // -----------------------------------------------------------------------------
+   var sumw = (+ reduce w);             // sum of weights               
+   var sum2yhat = chi2(theta);          // sum of squares of deviations 
+   var sig2yhat = sum2yhat/sumw;        // variance of deviations       
+   var (ym,yvar) = wstat2(y.arr,w);     // weighted variance of data    
+   var r2 = 1.0 - sig2yhat/yvar;        // coefficient of determination 
+   var redchi2: real;                   // reduced chi-square           
+   redchi2 = sum2yhat/(m - n);
+   // -----------------------------------------------------------------------------
+   // straighforward calculation of the parameter covariance matrix and the
+   // asymptotic standard parameter errors
+   // -----------------------------------------------------------------------------
+   dot_dm(w,J,maux_mn);       // WJ
+   dot_mtm(J,maux_mn,ctheta);      // J'WJ
+   minvgj(ctheta);                 // [J'WJ]^{-1}
+   mvdiag(ctheta,sigtheta);        // diagonal of [J'WJ]^{-1}
+   sigtheta = sqrt(sigtheta);      // square root of each element
+   // -----------------------------------------------------------------------------
+   // square root below is for the standard error of estimate, which is more
+   // readily grasped
+   // -----------------------------------------------------------------------------
+   return (redchi2,sqrt(sig2yhat),r2);
+   // -----------------------------------------------------------------------------
+   // proc chi2: the figure of merit
+   // -----------------------------------------------------------------------------
+   proc chi2(
+      ref pa: vec
+   ): real  {
+      assert(pa.size == n);
+      var ya = new vec({1..m});
+      var delya: [1..m] real;
+      func(x,pa,ya);
+      delya = ya.arr - y.arr;
+      dot_dv(w,delya,vaux_m);
+      var merit = dot_vtv(vaux_m,delya);
+      // writeln(" merit = ", merit);
+      return merit;      
+   }
+   // -----------------------------------------------------------------------------
+   // brute-force calculation of the jacobian matrix
+   // -----------------------------------------------------------------------------   
+   proc simplejacob() {
+      const delp: [1..n] real = 1.0e-6;
+      var forwp = new vec({1..n});
+      var backp = new vec({1..n});
+      var yplus = new vec({1..m});
+      var yminus = new vec({1..m});
+      for k in 1..n do {
+         forwp = theta;
+         backp = theta ;
          forwp[k] += delp[k];
          backp[k] -= delp[k];
          func(x,forwp,yplus);
@@ -1325,7 +1490,7 @@ proc gnewton(
 // -----------------------------------------------------------------------------
 // calculates the RHS of the linear system
 // -----------------------------------------------------------------------------
-      dot_mt_diagm(J,w,maux_nm);   // J'W
+      dot_mtd(J,w,maux_nm);   // J'W
       dot_mv(maux_nm,dely,vaux_n); // J'W[hat{y} - y]
 // -----------------------------------------------------------------------------
 // calculates the LHS of the linear system
@@ -1358,7 +1523,7 @@ proc gnewton(
 // straighforward calculation of the parameter covariance matrix and the
 // asymptotic standard parameter errors
 // -----------------------------------------------------------------------------
-   dot_diagm_m(w,J,maux_mn);       // WJ
+   dot_dm(w,J,maux_mn);       // WJ
    dot_mtm(J,maux_mn,cp);          // J'WJ
    minvgj(cp);                     // [J'WJ]^{-1}
    mvdiag(cp,sigp);                // diagonal of [J'WJ]^{-1}
@@ -1377,7 +1542,7 @@ proc gnewton(
       var delya: [1..m] real;
       func(x,pa,ya);
       delya = ya.arr - y.arr;
-      dot_diagm_v(w,delya,vaux_m);
+      dot_dv(w,delya,vaux_m);
       var merit = dot_vtv(vaux_m,delya);
       // writeln(" merit = ", merit);
       return merit;      
@@ -1517,7 +1682,7 @@ proc levmar(
 // -----------------------------------------------------------------------------
 // with J updated, calculate the RHS of the LM linear system
 // -----------------------------------------------------------------------------
-         dot_mt_diagm(J,w,maux_nm);     // maux_nm == J'W
+         dot_mtd(J,w,maux_nm);     // maux_nm == J'W
          dot_mv(maux_nm,dely,vaux_n);   // vaux_n == J'W[hat{y} - y]
 // -----------------------------------------------------------------------------
 // calculate (almost all of) the LHS of the LM linear system
@@ -1605,7 +1770,7 @@ proc levmar(
       var delya: [1..m] real;
       func(x,pa,ya);
       delya = ya.arr - y.arr;
-      dot_diagm_v(w,delya,vaux_m);
+      dot_dv(w,delya,vaux_m);
       var merit = dot_vtv(vaux_m,delya);
       // writeln(" merit = ", merit);
       return merit;      
@@ -1700,7 +1865,68 @@ proc barnes(
 }
 
 // -----------------------------------------------------------------------------
-// --> savitzky-golay: the savitzky-golay filter? one day!
-//
-// given xdata and ydata, and a window size m ...
+// --> triweight: calculates 2m + 1 (symmetrical in k) "triangular" weights that
+// decrease linearly from 1/((m+1)Δx) at k=0 to 0 at k = ±(m+1). When Δx = 1.0,
+// ∑ wᵢ = 1; otherwise, ∑ wᵢ Δx = 1.
 // -----------------------------------------------------------------------------
+proc triweight(
+   const in m: int,           // we want 2m + 1 non-zero weights
+   ref w: [-m..+m] real,      // the calculated weights
+   const in dx: real = 1.0    // the constant spacing
+   ) {
+   var s = 1.0/(m+1);
+   var sum = 0.0;
+   if dx != 1.0 then {
+      s /= dx;
+   }
+   // writeln("s = ",s);
+   for i in -m..+m do {
+      var xi: real = abs(i);
+      w[i] = s*(1.0 - xi/(m+1));
+      // writeln("i = ",i," w[i] = ",w[i]);
+      sum += w[i];
+   }
+   // writeln("sum = ",sum);
+}
+
+// -----------------------------------------------------------------------------
+// --> movavg: the moving average with weights w. Wraps indices around the
+// limits. This procedure assumes that ∑ awᵢ = 1: therefore, obtain w by calling
+// triweight(m,w). The actual calculation is axtil = ax * aw, where * means
+// convolution.
+// -----------------------------------------------------------------------------
+proc movavg(
+   const ref ax: [] real,     // array to be averaged
+   const ref aw: [] real,     // weights
+   ref axtil: [] real         // averaged array
+   ) where ax.rank == 1 && aw.rank == 1 && axtil.rank == 1 {
+   const n = ax.size;         // size of averaged array
+   const m = (aw.size-1)/2 ;  // this should be exact!
+   assert (axtil.size == n);
+   const ref x = ax.reindex(0..n-1);
+   const ref w = aw.reindex(-m..+m);
+   ref xtil = axtil.reindex(0..n-1);
+   // --------------------------------------------------------------------------
+   // Brute-force convolution.
+   // --------------------------------------------------------------------------
+   forall i in 0..n-1 do {
+      var mavg = 0.0;
+      for k in -m..+m do {
+         var indx = mod(i+k,n);    // wraps indices around 0..n-1
+         mavg += x[indx]*w[k];
+      }
+      xtil[i] = mavg;
+   }
+}
+
+
+// -----------------------------------------------------------------------------
+// --> Test of movavg.
+// -----------------------------------------------------------------------------
+// var x,xtil: [1..20] real;
+// fillRandom(x,0);
+// var w = [0.1,0.25,0.50,1.0,0.50,0.25,0.10];
+// writeln("Testing movavg");
+// movavg(x,w,xtil);
+// writeln("x   [1..10] = ",x[1..10]);
+// writeln("xtil[1..10] = ",xtil[1..10]);

@@ -1,0 +1,125 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper,top=3cm,right=2cm,left=2cm,bottom=2.5cm]{geometry}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext}
+\usepackage[ttscale=0.875]{libertine}
+\input{math.tex}
+\usepackage[libertine,cmintegrals,cmbraces]{newtxmath}
+\usepackage[round]{natbib}
+\usepackage[american]{babel}
+\usepackage[small]{titlesec}
+\usepackage{amsmath}
+\usepackage{iexec}
+\usepackage{listings}
+%% \usepackage{subscript}
+%% \usepackage{enumerate}
+%% \usepackage{booktabs}
+%% \usepackage{tabu}
+%% \usepackage{setspace}
+%% \usepackage{comment}
+\usepackage[defaultlines=4,all]{nowidow}
+\usepackage{needspace}
+\usepackage{graphicx}
+\usepackage{mathrsfs}
+\usepackage{ifpdf}
+\usepackage{upgreek}
+\usepackage[pdftex,colorlinks=true,%
+   urlcolor=blue,
+   linkcolor=blue,
+   citecolor=blue,
+   filecolor=blue]{hyperref}
+\input{mylistings.tex}
+\input{ira.tex}
+\renewcommand{\ttdefault}{lmtt}% default cmtt
+\newcommand{\texttk}[1]{\texttt{\bfseries #1}}
+
+
+
+\title{Documentation for \texttt{nmth.chpl}}
+
+\author{Nelson Luís Dias (\texttt{nelsonluisdias@gmail.com})}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+%% \section*{Notation}
+
+%% In this document,
+%% \begin{align}
+%%   \Exv\{X\} &= \int_{\mathbb{R}} xf_X(x)\,\md{x}, \\
+%%   \Var\{X\} &= \int_{\mathbb{F}} \left(x -
+%%   \Exv\{x\}\right)^2f_X(x)\,\md{x}
+%% \end{align}
+%% (where $f_X(x)$ is the probability density function of $X$) are
+%% population parameters, whereas
+%% \begin{align}
+%%   \Exv\{x\} = \overline{x} = \frac{1}{n}\sum_{i=1}^n x_i, \\
+%%   \Var\{x\} = \frac{1}{n}\sum_{i=1}^n \left(x_i-\overline{x}\right)^2
+%% \end{align}
+%% are sample statistics.
+
+
+
+\section{\texttt{logmod}: log-modulus function}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc logmod' -A2 nmth.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+\subsection{Theory}
+
+The \emph{log-modulus} function was introduced by
+\cite{john1980alternative}. It is asymptotically equal to $x$ for
+small values of its argument, and asymptoticall equal to $\ln(\cdot)$
+for large positive values of its argument:
+\begin{equation}
+\logmod(x) \equiv \sign(x)\ln(|x| + 1).\label{eq:def-logmod}
+\end{equation}
+Note that, asymptotically,
+\begin{equation}
+  \logmod(x) \sim \begin{cases}
+    x, & x \sim 0, \\
+    \sign(x)\ln(|x|), & |x| \gg 1,
+  \end{cases}
+\end{equation}
+and that $\logmod(x)$ is odd.
+
+
+
+
+\section{\texttt{expmod}: exponential-modulus function}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc expmod' -A2 nmth.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+\subsection{Theory}
+
+
+We often need the inverse of $\logmod$:
+\begin{align*}
+  y &= \sign(x)\ln(|x| + 1),  \\
+  \sign(y)y &= \ln(|x| + 1),  \\
+  \intertext{(because $\logmod$ is odd)}
+  \exp\left(\sign(y)y\right) &= |x| + 1, \\
+  \exp\left(|y|\right) &= |x| + 1, \\
+  |x| &= \exp\left(|y|\right) - 1, \\
+  x &= \sign(y)\left[ \exp\left(|y|\right) - 1\right],
+\end{align*}
+whence
+\begin{equation}
+\expmod(x) \equiv \sign(x)\left[ \exp\left(|x|\right) - 1\right]\label{eq:def-expmod}
+\end{equation}
+is the \emph{exponential-modulus} function.
+
+\bibliography{abbrevs,all}
+\bibliographystyle{apalike}
+
+
+\end{document}

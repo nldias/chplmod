@@ -249,7 +249,8 @@ proc svp(
       }
    }
    else {
-      halt ("svp(T,eqn): eqn must be: omit == 'Richards', 'Richards', or 'Tetens'");
+      compilerError("svp(T,eqn): eqn must be: omit == 'Richards', 'Richards', or 'Tetens'");
+      halt();
    }
 }
 

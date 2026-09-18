@@ -1,0 +1,171 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper,top=3cm,right=2cm,left=2cm,bottom=2.5cm]{geometry}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext}
+\usepackage[ttscale=0.875]{libertine}
+\input{math.tex}
+\usepackage[libertine,cmintegrals,cmbraces]{newtxmath}
+\usepackage[round]{natbib}
+\usepackage[american]{babel}
+\usepackage[small]{titlesec}
+\usepackage{amsmath}
+\usepackage{iexec}
+\usepackage{listings}
+%% \usepackage{subscript}
+%% \usepackage{enumerate}
+%% \usepackage{booktabs}
+%% \usepackage{tabu}
+%% \usepackage{setspace}
+%% \usepackage{comment}
+\usepackage[defaultlines=4,all]{nowidow}
+\usepackage{needspace}
+\usepackage{graphicx}
+\usepackage{mathrsfs}
+\usepackage{ifpdf}
+\usepackage{upgreek}
+\usepackage[pdftex,colorlinks=true,%
+   urlcolor=blue,
+   linkcolor=blue,
+   citecolor=blue,
+   filecolor=blue]{hyperref}
+\input{mylistings.tex}
+\input{ira.tex}
+\renewcommand{\ttdefault}{lmtt}% default cmtt
+\newcommand{\texttk}[1]{\texttt{\bfseries #1}}
+
+
+
+\title{Documentation for \texttt{nmth.chpl}}
+
+\author{Nelson Luís Dias (\texttt{nelsonluisdias@gmail.com})}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Notation}
+
+In this document,
+\begin{align}
+  \Exv\{X\} &= \int_{\mathbb{R}} xf_X(x)\,\md{x}, \\
+  \Var\{X\} &= \int_{\mathbb{F}} \left(x -
+  \Exv\{x\}\right)^2f_X(x)\,\md{x}
+\end{align}
+(where $f_X(x)$ is the probability density function of $X$) are
+population parameters, whereas
+\begin{align}
+  \Exv\{x\} = \overline{x} = \frac{1}{n}\sum_{i=1}^n x_i, \\
+  \Var\{x\} = \frac{1}{n}\sum_{i=1}^n \left(x_i-\overline{x}\right)^2
+\end{align}
+are sample statistics.
+
+
+
+\section{\texttt{logmod}: log-modulus function}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc logmod' -A2 nmth.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+\subsection{Theory}
+
+See (\ref{eq:def-logmod}) below.
+
+\section{\texttt{expmod}: exponential-modulus function}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc expmod' -A2 nmth.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+\subsection{Theory}
+
+See (\ref{eq:def-expmod}) below.
+
+
+
+\section{\texttt{gmom}: geometric-modulus mean}
+
+\subsection{Use}
+\iexec[quiet,trace,stdout=xtract.txt]{grep 'proc gmom' -A3 nmth.chpl}
+
+\lstinputlisting[style=lstchapelf, numbers=none]{xtract.txt}
+
+
+
+\subsection{Theory}
+
+
+
+\texttt{gmom} is my own humble attempt to generalize the idea of a
+geometric mean to sequences containing negative and null values, as well as
+positive.
+
+First, consider a sequence $(x_1, x_2, \ldots, x_n)$ containing only
+negative values. It is reasonable to define its ``geometric'' mean as
+\begin{align}
+  \tilde{x} &= -\exp\left[\frac{1}{n} \sum_{i=1}^n \ln(\left|x_i\right|)\right].\label{eq:gmean-neg}
+\end{align}
+For a sequence containing negative, null, and positive values,
+$\ln(\cdot)$ can no longer be used, and the singularity at the origin
+needs to be avoided. A function that has those attributes and is
+asymptotically equal to $\ln(\cdot)$ for large positive values of its
+argument is the \emph{log-modulus} function introduced by
+\cite{john1980alternative}:
+\begin{equation}
+\logmod(x) \equiv \sign(x)\ln(|x| + 1).\label{eq:def-logmod}
+\end{equation}
+Note that, asymptotically,
+\begin{equation}
+  \logmod(x) \sim \begin{cases}
+    x, & x \sim 0, \\
+    \sign(x)\ln(|x|), & x \gg 1,
+  \end{cases}
+\end{equation}
+and that $\logmod(x)$ is odd.
+
+In order to mimic (\ref{eq:gmean-explog}), we need the inverse of $\logmod$:
+\begin{align*}
+  y &= \sign(x)\ln(|x| + 1),  \\
+  \sign(y)y &= \ln(|x| + 1),  \\
+  \intertext{(because $\logmod$ is odd)}
+  \exp\left(\sign(y)y\right) &= |x| + 1, \\
+  \exp\left(|y|\right) &= |x| + 1, \\
+  |x| &= \exp\left(|y|\right) - 1, \\
+  x &= \sign(y)\left[ \exp\left(|y|\right) - 1\right],
+\end{align*}
+whence
+\begin{equation}
+\expmod(x) \equiv \sign(x)\left[ \exp\left(|x|\right) - 1\right]\label{eq:def-expmod}
+\end{equation}
+is the \emph{exponential-modulus} function.
+
+We are now ready to define the \emph{geometric-modulus} mean:
+\begin{equation}
+\tilde{x} \equiv \expmod\left[ \frac{1}{n}\sum_{i=1}^n
+  \logmod(x_i)\right].
+\label{eq:def-gmom}
+\end{equation}
+Evidently, for a sequence of positive real values where $x_i \gg 1\;
+\forall i = 1, \ldots, n$, (\ref{eq:def-gmom}) will produce results
+which are very close to (\ref{eq:gmean-explog}). However, if on the
+other hand $x_i \ll 1\; \forall i = 1, \ldots, n$, (\ref{eq:def-gmom})
+will be very much like the arithmetic mean, which is undesirable. The
+solution to always obtain a ``geometric mean''-like behavior for any
+sequence (now including possibly null and negative values as well) is
+to re-scale before averaging, by means of the following sequence of
+operations:
+\begin{align}
+  \delta &= \frac{\min(|x_i|)}{16}, \qquad x_i \ne 0, \label{eq:delta}\\
+  \xi_i &= \frac{x_i}{\delta}, \label{eq:xi}\\
+  \tilde{\xi} &= \expmod\left[ \frac{1}{n}\sum_{i=1}^n
+    \logmod(\xi_i)\right], \label{eq:tilde-xi}\\
+  \tilde{x} &= \delta \tilde{\xi}.\label{eq:tilde-x}
+\end{align}
+The factor 16 in (\ref{eq:delta}) is arbitrary and is meant to force
+all non-null $\xi$ to be ``sufficiently'' far from $\pm 1$.
+\end{document}

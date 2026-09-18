@@ -1,28 +1,24 @@
 use IO.FormattedIO;
-config const describe = false;
-const doc = "\
-=================================================================================\
-==> calendar: additional utilities for converting from julian (1--366) to        \
-yyyy-mm-dd                                                                       \
-=================================================================================\
-";
-if describe then {
-   writeln(doc);
-   exit(0);
-}
+// =============================================================================
+// calendar: additional utilities for converting from julian (1--366) to
+//    yyy-mm-dd
+// =============================================================================
+
+
 // -----------------------------------------------------------------------------
-// Nelson Luís Dias
+// Nelson LuÃ­s Dias
 // 2023-02-09T08:35:17
 // 2024-11-19T08:53:47 Converting NNdays to a const array.
 // 2025-05-22T12:26:01 Getting Leap from calendar.c Bissexto.
 // 2026-07-09T14:31:52 Converting NNDays to NNdays; now it is a two-dimensional
 //                     array.
 // 2026-07-09T14:31:05 Including YMDHtoStr and YMDtoStr.
+// 2026-07-21T10:50:37 Include StrtoYMD.
 // -----------------------------------------------------------------------------
 const NNdays:
 [0..1,1..12] int = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31;
                     31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] ;
-proc Leap(
+proc isLeap(
    const in Year: int
    ): bool {
    return ( ( (Year % 4 == 0) && (Year % 100 != 0) ) || (Year % 400 == 0) ) ;
@@ -80,4 +76,14 @@ inline proc YMDtoStr(
    var s = "%4i-%02i-%02i".format(year,month,day);
    return s;
 }
-
+// -----------------------------------------------------------------------------
+// --> StrtoYMD: convert string to YMD. Assumes string has the form "yyyy-mm-dd"
+// -----------------------------------------------------------------------------
+inline proc StrtoYMD(
+   const in s: string
+   ): (int,int,int) {
+   var year = s[0..3]:int;
+   var month = s[5..6]:int;
+   var day = s[8..9]:int;
+   return (year,month,day);
+}

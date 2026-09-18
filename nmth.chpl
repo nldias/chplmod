@@ -71,3 +71,19 @@ extern proc hypot(x: real, y: real): real;
 extern proc hypotf(x: real(32), y: real(32)): real(32);
 
 
+// -----------------------------------------------------------------------------
+// --> log-modulus function sgn(x)*log(|x| + 1)
+// -----------------------------------------------------------------------------
+inline proc logmod(
+   const in x: real
+): real {
+   return sgn(x)*log(abs(x)+1);
+}
+// -----------------------------------------------------------------------------
+// --> exp-modulus function sgn(x)*(exp(|x|) - 1)
+// -----------------------------------------------------------------------------
+inline proc expmod(
+   const in x: real
+): real {
+   return sgn(x)*(exp(abs(x))-1.0);
+}

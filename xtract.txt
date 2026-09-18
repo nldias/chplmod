@@ -1,3 +1,5 @@
-proc lowess_estimate(
-   in x: real                 // point around which to do linear regression
-   ): real {
+proc movavg(
+   const ref ax: [] real,     // array to be averaged
+   const ref aw: [] real,     // weights
+   ref axtil: [] real         // averaged array
+   ) where ax.rank == 1 && aw.rank == 1 && axtil.rank == 1 {

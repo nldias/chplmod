@@ -1,9 +1,10 @@
 // =============================================================================
 // ==> narray: n-dimensional arrays.
 // Still in development as of 2025-11-12T17:47:38
+// 2026-09-17T11:45:24 using it?
 // =============================================================================
 record narray {
-   param ran;                  // the rank
+   param ran;                      // the rank
    var dom: domain(ran);           // the domain                                 @\label{lin:narray-dom}@
    var arr: [dom] real;            // the array                                  @\label{lin:narray-arr}@
    // var vfirst = dom.first;              // the first index after reind
@@ -11,6 +12,9 @@ record narray {
    // var vdelta = 0;                      // the array shift
    proc size: int {                // the size of a narray
       return dom.size;
+   }
+   proc shape: ran*int {
+      return dom.shape;
    }
    // proc ref reindex(
    //    const in dv: range(int)
@@ -40,6 +44,11 @@ record narray {
      this.dom = rhs.dom;
      this.arr = rhs.arr;
    }
+   // proc init=(const in rhs:[?d] real) {
+   //    this.ran = d.rank;
+   //    this.dom = rhs.domain;
+   //    this.arr = rhs;
+   // }
    // operator :(a: narray(?), type t: narray(a.ran)) {
    //    var v: t = a;
    //    return v;
@@ -275,3 +284,9 @@ record narray {
 }
 
 */
+
+proc tonarray(const in x: [] real): narray(x.rank) {
+   var v = new narray(x.rank,x.domain);
+   v.arr = x;
+   return v;
+}

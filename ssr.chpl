@@ -131,6 +131,25 @@ proc issorted(ref a: [?da] ?ta): bool  where (isIntegralType(ta) || isRealType(t
    return true;
 }
 
+// -----------------------------------------------------------------------------
+// --> arraysAreEqual: checks element-wise equality of arrays and returns a
+// single bool.
+// -----------------------------------------------------------------------------
+proc arraysAreEqual(
+   A: [] ?t,        // queries A's type.
+   B: [] t          // enforces B has the same type as A.
+   ): bool {
+   // --------------------------------------------------------------------------
+   // First ensure domains (shapes/bounds) match.
+   // --------------------------------------------------------------------------
+   if A.domain != B.domain then return false;
+   // --------------------------------------------------------------------------
+   // Use promoted comparison and && reduction
+   // --------------------------------------------------------------------------
+   return && reduce (A == B);
+}
+
+
 // -------------------------------------------------------------------
 // --> heapsort: sorts an array of floats, using the heap algorithm
 //

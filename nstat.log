@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2024.8.29)  13 JUL 2026 10:33
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2024.8.29)  2 SEP 2026 09:45
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -738,62 +738,62 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 LaTeX Info: Redefining \textsubscript on input line 15.
 ))
 LaTeX Font Info:    Trying to load font information for T1+ntxtlf on input line
- 45.
+ 39.
 
 (/usr/share/texlive/texmf-dist/tex/latex/newtx/t1ntxtlf.fd
 File: t1ntxtlf.fd 2021/05/24 v1.1 font definition file for T1/ntx/tlf
 )
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 12.0pt on input line 45.
+(Font)              scaled to size 12.0pt on input line 39.
  (./nstat.aux)
 \openout1 = `nstat.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/nxlmi/m/it on input line 45.
+LaTeX Font Info:    Checking defaults for OML/nxlmi/m/it on input line 39.
 LaTeX Font Info:    Trying to load font information for OML+nxlmi on input line
- 45.
+ 39.
 
 (/usr/share/texlive/texmf-dist/tex/latex/newtx/omlnxlmi.fd
 File: omlnxlmi.fd 2013/11/19 Fontinst v1.933 font definitions for OML/nxlmi.
 )
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for U/ntxexa/m/n on input line 45.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for U/ntxexa/m/n on input line 39.
 LaTeX Font Info:    Trying to load font information for U+ntxexa on input line 
-45.
+39.
 
 (/usr/share/texlive/texmf-dist/tex/latex/newtx/untxexa.fd
 File: untxexa.fd 2012/04/16 Fontinst v1.933 font definitions for U/ntxexa.
 )
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for LMS/ntxsy/m/n on input line 45.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for LMS/ntxsy/m/n on input line 39.
 LaTeX Font Info:    Trying to load font information for LMS+ntxsy on input line
- 45.
+ 39.
 
 (/usr/share/texlive/texmf-dist/tex/latex/newtx/lmsntxsy.fd
 File: lmsntxsy.fd 2016/07/02 Fontinst v1.933 font definitions for LMS/ntxsy.
 )
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for LMX/ntxexx/m/n on input line 45.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for LMX/ntxexx/m/n on input line 39.
 LaTeX Font Info:    Trying to load font information for LMX+ntxexx on input lin
-e 45.
+e 39.
 
 (/usr/share/texlive/texmf-dist/tex/latex/newtx/lmxntxexx.fd
 File: lmxntxexx.fd 2016/07/03 Fontinst v1.933 font definitions for LMX/ntxexx.
 )
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 39.
+LaTeX Font Info:    ... okay on input line 39.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -853,60 +853,60 @@ e
 ))
 \c@mv@tabular=\count314
 \c@mv@boldtabular=\count315
-LaTeX Info: Command `\dddot' is already robust on input line 45.
-LaTeX Info: Command `\ddddot' is already robust on input line 45.
+LaTeX Info: Command `\dddot' is already robust on input line 39.
+LaTeX Info: Command `\ddddot' is already robust on input line 39.
 \c@lstlisting=\count316
-Package hyperref Info: Link coloring ON on input line 45.
+Package hyperref Info: Link coloring ON on input line 39.
 
 (./nstat.out) (./nstat.out)
 \@outlinefile=\write3
 \openout3 = `nstat.out'.
 
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 20.74pt on input line 48.
+(Font)              scaled to size 20.74pt on input line 42.
 LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 4
-8.
+2.
  (/usr/share/texmf/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 14.4pt on input line 48.
+(Font)              scaled to size 14.4pt on input line 42.
 LaTeX Font Info:    Trying to load font information for OT1+LinuxLibertineT-TLF
- on input line 48.
+ on input line 42.
 
 (/usr/share/texlive/texmf-dist/tex/latex/libertine/OT1LinuxLibertineT-TLF.fd
 File: OT1LinuxLibertineT-TLF.fd 2017/03/20 (autoinst) Font definitions for OT1/
 LinuxLibertineT-TLF.
 )
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 14.4pt on input line 48.
+(Font)              scaled to size 14.4pt on input line 42.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 10.5pt on input line 48.
+(Font)              scaled to size 10.5pt on input line 42.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 7.9pt on input line 48.
+(Font)              scaled to size 7.9pt on input line 42.
 
 
 LaTeX Font Warning: Font shape `U/stmry/m/n' in size <10.5> not available
-(Font)              size <10.95> substituted on input line 48.
+(Font)              size <10.95> substituted on input line 42.
 
 LaTeX Font Info:    Trying to load font information for U+ntxmia on input line 
-48.
+42.
 (/usr/share/texlive/texmf-dist/tex/latex/newtx/untxmia.fd
 File: untxmia.fd 2018/04/14 Fontinst v1.933 font definitions for U/ntxmia.
 )
 LaTeX Font Info:    Trying to load font information for U+ntxsym on input line 
-48.
+42.
 
 (/usr/share/texlive/texmf-dist/tex/latex/newtx/untxsym.fd
 File: untxsym.fd 2023/08/16 Fontinst v1.933 font definitions for U/ntxsym.
 )
 LaTeX Font Info:    Trying to load font information for U+ntxsyc on input line 
-48.
+42.
 
 (/usr/share/texlive/texmf-dist/tex/latex/newtx/untxsyc.fd
 File: untxsyc.fd 2012/04/12 Fontinst v1.933 font definitions for U/ntxsyc.
 )
-LaTeX Font Info:    Trying to load font information for U+rsfs on input line 48
+LaTeX Font Info:    Trying to load font information for U+rsfs on input line 42
 .
 
 (/usr/share/texlive/texmf-dist/tex/latex/jknapltx/ursfs.fd
@@ -914,37 +914,37 @@ File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
 )
 
 LaTeX Font Warning: Font shape `U/rsfs/m/n' in size <10.5> not available
-(Font)              size <10.95> substituted on input line 48.
+(Font)              size <10.95> substituted on input line 42.
 
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
-(Font)              scaled to size 12.0pt on input line 49.
+(Font)              scaled to size 12.0pt on input line 43.
 LaTeX Font Info:    Font shape `T1/ntxtlf/b/n' will be
-(Font)              scaled to size 14.4pt on input line 49.
+(Font)              scaled to size 14.4pt on input line 43.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 12.0pt on input line 52.
+(Font)              scaled to size 12.0pt on input line 46.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 8.8pt on input line 52.
+(Font)              scaled to size 8.8pt on input line 46.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 6.6pt on input line 52.
+(Font)              scaled to size 6.6pt on input line 46.
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <14.4> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 65.
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 59.
 runsystem((grep 'proc stat1' -A3 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $?
 % >iexec.ret)...executed.
 
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
-nput line 71.
+nput line 65.
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 10.0pt on input line 71.
+(Font)              scaled to size 10.0pt on input line 65.
 (./xtract.txt
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
 (Font)              Font shape `T1/lmtt/b/n' tried instead on input line 1.
 )
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 12.0pt on input line 79.
+(Font)              scaled to size 12.0pt on input line 73.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 8.8pt on input line 79.
+(Font)              scaled to size 8.8pt on input line 73.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 6.6pt on input line 79.
+(Font)              scaled to size 6.6pt on input line 73.
 runsystem((grep 'proc stat2' -A3 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $?
 % >iexec.ret)...executed.
 
@@ -959,9 +959,9 @@ runsystem((grep 'proc nanstat1' -A3 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n
 
  (./xtract.txt)
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 8.8pt on input line 115.
+(Font)              scaled to size 8.8pt on input line 109.
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 6.6pt on input line 115.
+(Font)              scaled to size 6.6pt on input line 109.
 runsystem((grep 'proc nanstat2' -A3 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n
  $?% >iexec.ret)...executed.
 
@@ -979,59 +979,51 @@ runsystem((grep 'proc nanwstat1' -A3 nstat.chpl) > xtract.txt 2>&1; /bin/echo -
 n $?% >iexec.ret)...executed.
 
  (./xtract.txt)
-runsystem((grep 'proc gmean' -A3 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $?
+runsystem((grep 'proc covar' -A6 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $?
 % >iexec.ret)...executed.
 
  (./xtract.txt [4])
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/it' will be
-(Font)              scaled to size 12.0pt on input line 206.
-runsystem((grep 'proc logmod' -A2 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $
-?% >iexec.ret)...executed.
-
-
-(./xtract.txt)
-runsystem((grep 'proc expmod' -A2 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $
-?% >iexec.ret)...executed.
-
- (./xtract.txt) [5]
-runsystem((grep 'proc gmom' -A3 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $?%
- >iexec.ret)...executed.
-
- (./xtract.txt) [6]
-runsystem((grep 'proc covar' -A6 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $?
-% >iexec.ret)...executed.
-
- (./xtract.txt)
+(Font)              scaled to size 12.0pt on input line 208.
 runsystem((grep 'proc trivar' -A8 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $
 ?% >iexec.ret)...executed.
 
- [7]
+
 (./xtract.txt)
 runsystem((grep 'proc median' -A3 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $
 ?% >iexec.ret)...executed.
 
- (./xtract.txt)
+ (./xtract.txt [5])
 runsystem((grep 'proc nanmedian' -A3 nstat.chpl) > xtract.txt 2>&1; /bin/echo -
 n $?% >iexec.ret)...executed.
 
- (./xtract.txt) [8]
+ (./xtract.txt)
 runsystem((grep 'proc quartiles' -A3 nstat.chpl) > xtract.txt 2>&1; /bin/echo -
 n $?% >iexec.ret)...executed.
 
- (./xtract.txt)
+ (./xtract.txt) [6]
+runsystem((grep 'proc gmean' -A3 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $?
+% >iexec.ret)...executed.
+
+
+(./xtract.txt)
+runsystem((grep 'proc gmom' -A3 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $?%
+ >iexec.ret)...executed.
+
+ (./xtract.txt) [7] [8]
 runsystem((grep 'proc whiskers' -A3 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n
  $?% >iexec.ret)...executed.
 
  (./xtract.txt)
-[9]
 runsystem((grep 'proc xbins' -A7 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $?
 % >iexec.ret)...executed.
 
- (./xtract.txt)
+ (./xtract.txt) [9]
 runsystem((grep 'proc outlimits' -A4 nstat.chpl) > xtract.txt 2>&1; /bin/echo -
 n $?% >iexec.ret)...executed.
 
- (./xtract.txt) [10]
+
+(./xtract.txt)
 runsystem((grep 'proc force_bounds' -A10 nstat.chpl) > xtract.txt 2>&1; /bin/ec
 ho -n $?% >iexec.ret)...executed.
 
@@ -1039,89 +1031,519 @@ ho -n $?% >iexec.ret)...executed.
 runsystem((grep 'proc reglin(' -A4 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n 
 $?% >iexec.ret)...executed.
 
- (./xtract.txt) [11]
+ [10] (./xtract.txt)
 runsystem((grep 'proc reglina(' -A8 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n
  $?% >iexec.ret)...executed.
 
-
-(./xtract.txt) [12]
+ (./xtract.txt) [11]
 runsystem((grep 'proc reglinpar(' -A10 nstat.chpl) > xtract.txt 2>&1; /bin/echo
  -n $?% >iexec.ret)...executed.
 
- (./xtract.txt) [13]
+ [12]
+(./xtract.txt)
 runsystem((grep 'proc ols' -A11 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $?%
  >iexec.ret)...executed.
 
- (./xtract.txt)
+ (./xtract.txt) [13]
 LaTeX Font Info:    Font shape `T1/ntxtlf/m/n' will be
-(Font)              scaled to size 6.0pt on input line 668.
+(Font)              scaled to size 6.0pt on input line 649.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 6.5pt on input line 668.
+(Font)              scaled to size 6.5pt on input line 649.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 5.5pt on input line 668.
+(Font)              scaled to size 5.5pt on input line 649.
 
 
 LaTeX Font Warning: Font shape `U/stmry/m/n' in size <6.5> not available
-(Font)              size <6> substituted on input line 668.
+(Font)              size <6> substituted on input line 649.
 
 
 LaTeX Font Warning: Font shape `U/stmry/m/n' in size <5.5> not available
-(Font)              size <5> substituted on input line 668.
+(Font)              size <5> substituted on input line 649.
 
 
 LaTeX Font Warning: Font shape `U/rsfs/m/n' in size <6.5> not available
-(Font)              size <6> substituted on input line 668.
+(Font)              size <6> substituted on input line 649.
 
 
 LaTeX Font Warning: Font shape `U/rsfs/m/n' in size <5.5> not available
-(Font)              size <5> substituted on input line 668.
+(Font)              size <5> substituted on input line 649.
 
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 6.5pt on input line 668.
+(Font)              scaled to size 6.5pt on input line 649.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 5.5pt on input line 668.
-[14]
+(Font)              scaled to size 5.5pt on input line 649.
 runsystem((grep 'proc init_lowess' -A5 nstat.chpl) > xtract.txt 2>&1; /bin/echo
  -n $?% >iexec.ret)...executed.
 
- (./xtract.txt)
+(./xtract.txt) [14{/usr/share/texlive/texmf-dist/fonts/enc/dvips/libertine/lbtn
+_fygcup.enc}]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 714.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\mathaccent' on input line 714.
+(hyperref)                removing `math shift' on input line 695.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 714.
+(hyperref)                removing `\mathaccent' on input line 695.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 714.
+(hyperref)                removing `math shift' on input line 695.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 714.
+(hyperref)                removing `math shift' on input line 695.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 695.
 
 runsystem((grep 'proc lowess_estimate' -A2 nstat.chpl) > xtract.txt 2>&1; /bin/
 echo -n $?% >iexec.ret)...executed.
 
-[15{/usr/share/texlive/texmf-dist/fonts/enc/dvips/libertine/lbtn_fygcup.enc}]
 (./xtract.txt)
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <12> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 741.
- [16] (./exlow.chpl)
-<exlow.pdf, id=706, 361.35pt x 252.945pt>
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 722.
+ [15] (./exlow.chpl [16])
+<exlow.pdf, id=707, 361.35pt x 252.945pt>
 File: exlow.pdf Graphic file (type pdf)
 <use exlow.pdf>
-Package pdftex.def Info: exlow.pdf  used on input line 821.
+Package pdftex.def Info: exlow.pdf  used on input line 802.
 (pdftex.def)             Requested size: 290.22107pt x 203.15521pt.
- [17] [18 <./exlow.pdf>] [19
+ [17 <./exlow.pdf>] [18
 
-] [20] [21]
-(./nstat.bbl [22]) [23] (./nstat.aux)
+] [19] [20]
+runsystem((grep 'proc triweight' -A4 nstat.chpl) > xtract.txt 2>&1; /bin/echo -
+n $?% >iexec.ret)...executed.
+
+
+(./xtract.txt) [21] [22]
+LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/sb/n' will be
+(Font)              scaled to size 14.4pt on input line 1138.
+LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/sb/n' will be
+(Font)              scaled to size 10.5pt on input line 1138.
+LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/sb/n' will be
+(Font)              scaled to size 7.9pt on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\begingroup' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\<let>-command' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\@nomath' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\begingroup' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\setbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\hbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\thinmuskip' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\medmuskip' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\m@ne' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\thickmuskip' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\@ne' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\setbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\tw@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\hbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathsurround' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathsurround' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\<def>-command' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathchoice' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\hbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathsurround' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\displaystyle' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\hbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathsurround' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\textstyle' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\hbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathsurround' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\scriptstyle' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\hbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathsurround' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\scriptscriptstyle' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\endgroup' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\begingroup' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\<let>-command' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\@nomath' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\begingroup' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\setbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\hbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\thinmuskip' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\medmuskip' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\m@ne' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\thickmuskip' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\@ne' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\setbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\tw@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\hbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathsurround' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathsurround' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\<def>-command' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathchoice' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\hbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathsurround' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\displaystyle' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\hbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathsurround' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\textstyle' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\hbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathsurround' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\scriptstyle' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\hbox' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\mathsurround' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\z@' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\scriptscriptstyle' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\endgroup' on input line 1138.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1138.
+
+runsystem((grep 'proc movavg' -A4 nstat.chpl) > xtract.txt 2>&1; /bin/echo -n $
+?% >iexec.ret)...executed.
+
+(./xtract.txt) (./nstat.bbl [23]) [24] (./nstat.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2020/03/25>
@@ -1132,16 +1554,16 @@ LaTeX Font Warning: Size substitutions with differences
 (Font)              up to 1.36998pt have occurred.
 
 Package rerunfilecheck Info: File `nstat.out' has not changed.
-(rerunfilecheck)             Checksum: B6860FD0F69A885878BBEA1D28446B74;11648.
+(rerunfilecheck)             Checksum: 8C9D773F952725E7DBDA0E0873AED5D4;11967.
  ) 
 Here is how much of TeX's memory you used:
- 20787 strings out of 475528
- 318265 string characters out of 5783984
- 2099975 words of memory out of 5000000
- 41894 multiletter control sequences out of 15000+600000
- 708474 words of font info for 317 fonts, out of 8000000 for 9000
+ 20843 strings out of 475528
+ 319150 string characters out of 5783984
+ 2109975 words of memory out of 5000000
+ 41931 multiletter control sequences out of 15000+600000
+ 725723 words of font info for 347 fonts, out of 8000000 for 9000
  499 hyphenation exceptions out of 8191
- 80i,22n,97p,508b,2270s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 80i,22n,97p,550b,2298s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/newtx/LibertineMathBMI.pfb>
 </usr/share/texlive/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></u
 sr/share/texlive/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr
@@ -1160,10 +1582,10 @@ ts/type1/public/newtx/txsym.pfb></usr/share/texlive/texmf-dist/fonts/type1/publ
 ic/newtx/txsys.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/newtx/ztmb
 .pfb></usr/share/texlive/texmf-dist/fonts/type1/public/newtx/ztmr.pfb></usr/sha
 re/texlive/texmf-dist/fonts/type1/public/newtx/ztmri.pfb>
-Output written on nstat.pdf (23 pages, 577606 bytes).
+Output written on nstat.pdf (24 pages, 583001 bytes).
 PDF statistics:
- 1019 PDF objects out of 1200 (max. 8388607)
- 936 compressed objects within 10 object streams
- 422 named destinations out of 1000 (max. 500000)
+ 1043 PDF objects out of 1200 (max. 8388607)
+ 959 compressed objects within 10 object streams
+ 438 named destinations out of 1000 (max. 500000)
  654 words of extra memory for PDF output out of 10000 (max. 10000000)
 

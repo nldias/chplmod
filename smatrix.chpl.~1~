@@ -25,9 +25,9 @@ proc dot_mv(const ref aA: [] real,
   }
 }
 // -----------------------------------------------------------------------------
-// --> dot_m: calculates the product of a matrix a[m,n] with a diagonal matrix
-// b[n,n] represented here by a vector b[n]; puts result in c[m,n]: this is the
-// same as multiplying each line of a by the corresponding element in the
+// --> dot_m_diagm: calculates the product of a matrix a[m,n] with a diagonal
+// matrix b[n,n] represented here by a vector b[n]; puts result in c[m,n]: this
+// is the same as multiplying each line of a by the corresponding element in the
 // diagonal of b. Note that b is passed as a *vector* with only the diagonal
 // elements.
 //
@@ -35,7 +35,7 @@ proc dot_mv(const ref aA: [] real,
 //
 // 2025-05-05T14:10:42
 // -----------------------------------------------------------------------------
-proc dot_md(
+proc dot_m_diagm(
   const ref aa: [] real, 
   const ref bb: [] real,
         ref cc: [] real
@@ -58,17 +58,17 @@ proc dot_md(
 }
 
 // -----------------------------------------------------------------------------
-// --> dot_mtd: calculates the product of a transpose matrix a'[n,m] (where
+// --> dot_mt_diagm: calculates the product of a transpose matrix a'[n,m] (where
 // a[m,n] is a matrix) with a diagonal matrix b[m,m] represented here by a
 // vector b[m]; puts result in c[n,m]: this is the same as multiplying each line
-// of a' by the corresponding element in the diagonal of b. Note that b is
-// passed as a *vector* with only the diagonal elements.
+// of a' by the corresponding element in the diagonal of b. Note that b is passed
+// as a *vector* with only the diagonal elements.
 //
 // Nelson Luis Dias
 //
 // 2023-03-08T17:47:35
 // -----------------------------------------------------------------------------
-proc dot_mtd(
+proc dot_mt_diagm(
   const ref aa: [] real, 
   const ref bb: [] real,
         ref cc: [] real
@@ -339,16 +339,16 @@ proc minvgj(ref wa: [] real): bool {
 
 
 // -----------------------------------------------------------------------------
-// --> dot_dm: calculates the product of a diagonal matrix a[n,n] and b[n,p];
-// puts result in c[n,p]: this is the same as multiplying each line of b by the
-// corresponding element in the diagonal of a. Note that a is passed as a
+// --> dot_diagm_m: calculates the product of a diagonal matrix a[n,n] and
+// b[n,p]; puts result in c[n,p]: this is the same as multiplying each line of b
+// by the corresponding element in the diagonal of a. Note that a is passed as a
 // *vector* with only the diagonal elements.
 //
 // Nelson Luis Dias
 //
 // 2023-02-18T15:38:51
 // -----------------------------------------------------------------------------
-proc dot_dm(
+proc dot_diagm_m(
   const ref aa: [] real, 
   const ref bb: [] real,
         ref cc: [] real
@@ -373,8 +373,8 @@ proc dot_dm(
 
 
 // -----------------------------------------------------------------------------
-// --> dot_dv: calculates the product of a diagonal matrix a[n,n] and b[n]; puts
-// result in c[n]: this is the same as multiplying each element of b by the
+// --> dot_diagm_v: calculates the product of a diagonal matrix a[n,n] and b[n];
+// puts result in c[n]: this is the same as multiplying each element of b by the
 // corresponding element in the diagonal of a. Note that a is passed as a
 // *vector* with only the diagonal elements. This is so simple that I made it
 // inline.
@@ -384,7 +384,7 @@ proc dot_dm(
 // 2023-03-06T18:13:06
 // 2024-03-14T08:32:36 cleaning up (no need to reindex)
 // -----------------------------------------------------------------------------
-inline proc dot_dv(
+inline proc dot_diagm_v(
    const ref a: [] real,       // the diagonal of the matrix
    const ref b: [] real,       // the array 
    ref c: [] real              // the product

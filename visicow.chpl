@@ -42,7 +42,7 @@ proc cowhead(in line: string) {
    }
 }
 // -----------------------------------------------------------------------------
-// --> cowstable: split a line into values and puts them in the stable
+// --> cowstable: split a line into values and put them in the stable
 // -----------------------------------------------------------------------------
 inline proc cowstable(in s: string) {
    var t = s.strip();
